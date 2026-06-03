@@ -1,0 +1,156 @@
+TY  - CONF
+AU  - Suggula, V.
+AU  - Goli, R.R.
+TI  - Real-Time Fraud Detection in Banking Transactions using Kafka Streaming and Machine Learning Ensemble
+PY  - 2025
+T2  - 2025 1st International Conference on Advancement in Futuristic Technologies, ICAFT 2025
+DO  - 10.1109/ICAFT66710.2025.11453240
+UR  - https://www.scopus.com/pages/publications/105037322080?origin=resultslist
+AD  - Chalapathi Institute of Technology, Dept. of Cse, Mothadaka, A.P, Guntur, 522016, India
+AB  - The rapid increased number of transactions of digital banks has presented unmatched challenges in the real-time detection and prevention of fraudulent activities. Conventional methods of batch processing usually do not detect fraud until lots of money has been stolen and this translates to billions of dollars being lost every year by financial institutions all over the world. This paper suggests a new real-time fraud detection system, which incorporates Apache Kafka streaming platform and an ensemble machine learning framework of banking transactions. The suggested architecture uses the distributed streaming features of Kafka to process incoming data streams of transactions at high velocity and at the same time deploy several machine learning models such as Random Forest, Support Vector Machines (SVM) and Gradient Boosting to identify anomalous patterns that may be signs of fraudulent activities. Our system solves urgent class disproportion issue in the fraud detection data set by Synthetic Minority Over-sampling Technique (SMOTE), which guarantees sound model performance in both the fraudulent and legitimate transaction classes. The ensemble method takes the combination of predictions of several base classifiers with a vote based on weights, and it is shown to be more accurate in detecting as opposed to the individual models. The results of our experiments on publicly accessible data of bank transaction indicate that our system has 97.84% accuracy, 96.32% precision, 95.87% recall, and F1-score of 96.09, which are higher than the currently existing state-of-the-art models. The Kafka-based architecture allows a latency of sub-second in fraud detection with a transaction flow of 10,000 or more transactions per second and high accuracy. Its scalability and fault-tolerance properties render it applicable to be used in large scale banking context where real time fraud prevention is of the essence in ensuring customer confidence and in regulatory compliance. © 2025 IEEE.
+KW  - Apache Kafka
+KW  - Banking Security
+KW  - Data Streaming
+KW  - Ensemble Learning
+KW  - Fraud Detection
+KW  - Machine Learning
+KW  - Real-time Processing
+KW  - SMOTE
+KW  - Adaptive boosting
+KW  - Banking
+KW  - Batch data processing
+KW  - Computer architecture
+KW  - Crime
+KW  - Data streams
+KW  - Distributed computer systems
+KW  - Fault tolerance
+KW  - Learning systems
+KW  - Support vector machines
+KW  - Apache kafkum
+KW  - Banking security
+KW  - Data streaming
+KW  - Ensemble learning
+KW  - Fraud detection
+KW  - Machine-learning
+KW  - Real- time
+KW  - Real-time detection
+KW  - Realtime processing
+KW  - Synthetic minority over-sampling techniques
+KW  - Regulatory compliance
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 979-833157159-7 (ISBN)
+LA  - English
+J2  - Int. Conf. Adv. Futur. Technol., ICAFT
+M3  - Conference paper
+DB  - Scopus
+N1  - Export Date: 29 May 2026; Cited By: 0; Correspondence Address: V. Suggula; Chalapathi Institute of Technology, Dept. of Cse, Guntur, Mothadaka, A.P, 522016, India; email: suggulavyshnavi13@gmail.com
+ER  -
+
+TY  - CONF
+AU  - Attivilli, R.
+AU  - Arul Jothi, A.
+TI  - Serverless Stream-Based Processing for Real Time Credit Card Fraud Detection Using Machine Learning
+PY  - 2023
+T2  - 2023 IEEE World AI IoT Congress, AIIoT 2023
+SP  - 434
+EP  - 439
+DO  - 10.1109/AIIoT58121.2023.10174314
+UR  - https://www.scopus.com/pages/publications/85166669608?origin=resultslist
+AD  - Birla Institute of Technology and Science, Pilani, Computer Science, Dubai Campus, Dubai, United Arab Emirates
+AB  - Advancement in technology has exponentially increased the number of digital transactions occurring every day. In order to make accurate decisions in a situation, we use various ML algorithms to identify hidden patterns in the data. However, the dynamic nature of a customer's behavior and adaptive nature of fraudsters makes it difficult for accurate predictions by fraud detection systems. Additionally, the redactions (due to security reasons) in the publicly available credit card fraud datasets make it difficult for an in-depth analysis. This paper studies the various data imbalance handling techniques such as Oversampling, UnderSampling, Synthetic Minority OverSampling and Adasyn and its effects on the accuracy of the machine learning algorithms for credit card fraud detection. For an in-depth analysis, four machine learning algorithms like Logistic Regression, Random Forest, XGBoost and Decision Trees have been chosen for comparison. Each of these algorithms were tuned for optimal hyperparameters before building the models. As an additional feature, the benefits of feature engineering have been studied and a real-time fraud detection system has been developed and deployed on Google Cloud Platform. XGBoost with oversampling provided the best results with an ROC Score of 0.97 and is considered the best model. Therefore, the XGBoost model was deployed on Google Cloud and feature engineering was studied on this model. The model built with feature engineering had an ROC score of 0.9880 which is higher in comparison to the model without feature engineering 0.9659. Therefore, we can conclude that feature engineering significantly improves the accuracy of the model. Finally, a dashboard was built and deployed on Google Cloud Dashboards for incorporating analytics into the fraud detection system.  © 2023 IEEE.
+KW  - Adasyn
+KW  - Decision Tree
+KW  - Feature Engineering
+KW  - Logistic Regression
+KW  - Random Forest
+KW  - Real-time cloud deployment
+KW  - SMOTE
+KW  - XGBoost
+KW  - Crime
+KW  - Data Analytics
+KW  - Data handling
+KW  - Logistic regression
+KW  - Random forests
+KW  - Adasyn
+KW  - Cloud deployments
+KW  - Feature engineerings
+KW  - Fraud detection system
+KW  - Logistics regressions
+KW  - Random forests
+KW  - Real- time
+KW  - Real-time cloud deployment
+KW  - SMOTE
+KW  - Xgboost
+KW  - Decision trees
+A2  - Chakrabarti S.
+A2  - Paul R.
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 979-835033761-7 (ISBN)
+LA  - English
+J2  - IEEE World AI IoT Congr., AIIoT
+M3  - Conference paper
+DB  - Scopus
+N1  - Export Date: 29 May 2026; Cited By: 2; Correspondence Address: R. Attivilli; Birla Institute of Technology and Science, Pilani, Computer Science, Dubai, Dubai Campus, United Arab Emirates; email: f20190224@dubai.bits-pilani.ac.in
+ER  -
+
+TY  - CONF
+AU  - Venkatasubbu, G.
+TI  - Streaming Intelligence Real Time Fraud Detection in Retail Payments Using Machine Learning
+PY  - 2025
+T2  - International Conference on Engineering and Emerging Technologies, ICEET
+DO  - 10.1109/ICEET67911.2025.11424068
+UR  - https://www.scopus.com/pages/publications/105035374588?origin=resultslist
+AD  - Cumming, GA, United States
+AB  - The expansion of electronic payments in the retail sector has been accompanied by an increase in advanced payment frauds. Traditional rule based legacy static fraud detection methods, in most cases, proved inadequate to address dynamically changing and constantly evolving fraudster practices. This paper discusses an efficient real time fraud detection system through a combination of Machine Learning (ML) algorithms and real time data stream processing technology. The study is helpful in the sense that it has a constructed synthetic transaction data set which was specially designed and built to be utilized for the very specific purpose of simulating real retail payment scenarios. The data have 489 samples with columns of transaction amount, merchant category, time of day, and frequency of transactions. We test and use a subset of the ML algorithms, like Random Forest and Gradient Boosting, to identify fraud effectively with very low latency. The solution takes consumption transaction as an Apache Kafka stream simulated, real time feature creation, and scoring of transactions using trained ML models. It depicts how ensemble methods, of which Gradient Boosting is a fair example, are more precise in recall and accuracy and minimize false negatives and false positives to a significant degree. This research acknowledges the prospect of a streaming paradigm and sophisticated ML in developing adaptive and real time fraud detection systems of high value addition to the security framework of modern retail payment systems. © 2025 IEEE.
+KW  - Anomaly Detection
+KW  - Fraud Detection
+KW  - Machine Learning
+KW  - Real Time Data Streams
+KW  - Retail Payments
+KW  - Adaptive boosting
+KW  - Anomaly detection
+KW  - Crime
+KW  - Data streams
+KW  - Electronic money
+KW  - Machine learning
+KW  - Anomaly detection
+KW  - Electronic payment
+KW  - Fraud detection
+KW  - Fraud detection system
+KW  - Gradient boosting
+KW  - Machine learning algorithms
+KW  - Machine-learning
+KW  - Real- time
+KW  - Real-time data streams
+KW  - Retail payment
+KW  - Learning systems
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 24092983 (ISSN); 979-833156755-2 (ISBN)
+LA  - English
+J2  - Int. Conf. Eng. Emerg. Technol., ICEET
+M3  - Conference paper
+DB  - Scopus
+N1  - Export Date: 29 May 2026; Cited By: 0; Correspondence Address: G. Venkatasubbu; Cumming, United States; email: gopalakrishnan.venkatasubbu1@gmail.com
+ER  -
+
+TY  - JOUR
+TI  - 3rd International Conference on Intelligent Computing and Communication, ICICC 2019
+PY  - 2020
+T2  - Advances in Intelligent Systems and Computing
+VL  - 1034
+UR  - https://www.scopus.com/pages/publications/85081369297?origin=resultslist
+AB  - The proceedings contain 83 papers. The special focus in this conference is on Intelligent Computing and Communication. The topics include: Potential Threat Detection from Industrial Accident Reports Using Text Mining; bagging for Improving Accuracy of Diabetes Classification; two-Way Handshake User Authentication Scheme for e-Banking System; periocular Biometrics for Non-ideal Images Using Deep Convolutional Neural Networks; an Elliptic Curve Cryptography-Based Multi-Server Authentication Scheme Using Cancelable Biometrics; Dynamic TDMA Scheduling for Topology Controlled Clustering in Wireless Sensor Networks; deep Learning-Based Music Chord Family Identification; A Multilevel CNN Architecture for Character Recognition from Palm Leaf Images; improving the Efficiency of Ensemble Classifier Adaptive Random Forest with Meta Level Learning for Real-Time Data Streams; novel Multimodel Approach for Marathi Speech Emotion Detection; assessment of Autistic Disorder Using Machine Learning Approach; use of Data Mining Techniques for Data Balancing and Fraud Detection in Automobile Insurance Claims; application of Generalized Possibilistic Fuzzy C-Means Clustering for User Profiling in Mobile Networks; A Method to Detect Blink from the EEG Signal; Power-Efficient Reversible Logic Design of S-Box for N-Bit AES; Salient Edge(s) and Region(s) Extraction for RGB-D Image; Web Text Categorization: A LSTM-RNN Approach; Closed-Set Device-Independent Speaker Identification Using CNN; A Novel and Efficient Spatiotemporal Oxygen Production Estimation Based on Land Vegetation Using PNN and Convolutional Autoencoder; plain Text Encryption Using Sudoku Cipher; a Faster Fuzzy Clustering Approach for Recommender Systems; saliency Detection for Semantic Segmentation of Videos; real-World Anomaly Detection Using Deep Learning; automatic Facial Expression Recognition Using Histogram Oriented Gradients (HoG) of Shape Information Matrix; preface.
+A2  - Bhateja V.
+A2  - Bhateja V.
+A2  - Satapathy S.C.
+A2  - Zhang Y.-D.
+A2  - Aradhya V.N.M.
+PB  - Springer
+SN  - 21945357 (ISSN); 978-981151083-0 (ISBN)
+LA  - English
+J2  - Adv. Intell. Sys. Comput.
+M3  - Conference review
+DB  - Scopus
+N1  - Export Date: 29 May 2026; Cited By: 0
+ER  -
+

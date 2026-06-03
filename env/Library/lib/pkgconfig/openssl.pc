@@ -1,0 +1,9 @@
+prefix=C:/Users/Acer/Documents/2026/8.Waikato/papers/P3_fraud_detection_stream/env/Library 
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: OpenSSL
+Description: Secure Sockets Layer and cryptography libraries and tools
+Requires: libssl libcrypto
+Version: 3.5.6 

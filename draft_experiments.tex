@@ -1,0 +1,38 @@
+\section{Experiments and Results}
+\label{sec:experiments}
+
+To validate the efficacy of the proposed Cost-Sensitive Adaptive Random Forest (CS-ARF), we conducted a series of online learning experiments. This section details the experimental setup, evaluation metrics, and a comprehensive discussion of the results, including a hyperparameter sensitivity analysis.
+
+\subsection{Experimental Setup and Evaluation Metrics}
+The models were evaluated using a highly imbalanced credit card fraud data stream, where fraudulent transactions constituted less than 0.2\% of the total volume. The stream was processed sequentially using the \textit{Interleaved Test-Then-Train} (Prequential) evaluation method. In this paradigm, each incoming transaction is first used to test the model's predictive accuracy before being used to train and update the model's internal nodes. This ensures that the model is always evaluated on unseen data, perfectly simulating a real-time production environment.
+
+Because standard accuracy metrics are highly misleading in extreme class imbalance scenarios (the accuracy paradox), we evaluated the models using two robust metrics:
+\begin{itemize}
+    \item \textbf{Recall (True Positive Rate):} Measures the percentage of actual fraudulent transactions successfully identified by the model.
+    \item \textbf{Geometric Mean (G-Mean):} Measures the balance between the classification performance on the majority class (legitimate) and the minority class (fraud). A high G-Mean ensures that the model is not aggressively flagging all transactions as fraud (i.e., maintaining a low false-positive rate).
+\end{itemize}
+
+The proposed CS-ARF was benchmarked against the standard Adaptive Random Forest (ARF) algorithm to isolate the impact of the Implicit Online Oversampling mechanism.
+
+\subsection{Results and Discussion}
+
+\subsubsection{The Failure of Standard Streaming Models}
+The prequential evaluation results starkly illustrated the vulnerability of standard streaming algorithms to extreme class imbalance. The standard ARF baseline achieved a Fraud Recall of 0\% and a G-Mean of 0\% consistently throughout the entire data stream. Despite being equipped with the ADWIN drift detector, the standard model collapsed into a majority-class predictor. It achieved near 99.8\% global accuracy simply by predicting every transaction as legitimate, rendering it entirely useless for financial fraud detection.
+
+\subsubsection{Performance of Cost-Sensitive ARF}
+In contrast, the proposed CS-ARF demonstrated a dramatic improvement. By integrating the asymmetric cost matrix ($\lambda = \beta$) into the online bagging mechanism, the CS-ARF immediately began learning the minority class. The model rapidly achieved a Fraud Recall of approximately 78\% while simultaneously stabilizing its G-Mean at 88\%. This proves that the Implicit Online Oversampling successfully forced the Hoeffding Trees to discriminate the fraud patterns without triggering a catastrophic increase in false alarms (false positives). The CS-ARF successfully adapted to concept drift while maintaining high sensitivity to the rare fraud class.
+
+\subsubsection{Hyperparameter Sensitivity Analysis (Ablation Study)}
+To determine the optimal asymmetric cost boundary, we conducted an ablation study by varying the penalty parameter $\beta \in \{100, 200, 300, 500\}$. The parameter $\beta$ dictates how many times a fraudulent instance is implicitly oversampled within the Poisson distribution.
+
+\begin{itemize}
+    \item \textbf{$\beta = 100$ and $200$:} The model exhibited a moderate increase in performance, with Recall stabilizing around 70\% and 74\%, respectively. While this was a vast improvement over the baseline, the model still exhibited slight underfitting regarding the minority class.
+    \item \textbf{$\beta = 300$:} This configuration achieved the highest stable performance, reaching a peak Recall of 78\% and a G-Mean of 88\%. The model demonstrated high robustness against concept drift over the entire stream of 50,000 transactions.
+    \item \textbf{$\beta = 500$:} Pushing the cost penalty closer to the theoretical imbalance ratio ($\approx 1:500$) yielded diminishing returns. The performance curve plateaued, showing identical Recall and G-Mean metrics to $\beta = 300$. At this stage, the leaf nodes in the Hoeffding Trees were already fully saturated with fraud probability, meaning further amplification of the Poisson weight provided no additional information gain.
+\end{itemize}
+
+Based on this sensitivity analysis, we conclude that $\beta = 300$ serves as the optimal computational and predictive asymptote for this specific data stream, maximizing fraud detection capability without overfitting to obsolete fraud patterns.
+
+\section{Conclusion}
+\label{sec:conclusion}
+This paper addressed the dual challenge of concept drift and extreme class imbalance in real-time credit card fraud detection. We proposed the Cost-Sensitive Adaptive Random Forest (CS-ARF), which incorporates an Implicit Online Oversampling mechanism. Our prequential experiments demonstrated that standard streaming models completely fail to detect fraud under extreme imbalance. However, by dynamically injecting an asymmetric cost penalty ($\beta=300$) into the Poisson bagging distribution, the proposed CS-ARF achieved a 78\% fraud recall and an 88\% G-Mean in a strict single-pass environment. Future work will explore the integration of automated, dynamic $\beta$ adjustment based on real-time class ratio estimations.

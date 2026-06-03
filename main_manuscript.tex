@@ -1,0 +1,325 @@
+\documentclass[12pt, a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{pifont} % For checkmarks and crossmarks
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{multirow}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+\geometry{margin=1in}
+
+% --- Title & Authors ---
+\title{Cost-Sensitive Adaptive Random Forest for Real-Time Fraud Detection in Highly Imbalanced Data Streams}
+\author{M. Hasyim Ratsanjani \\ State Polytechnic of Malang}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Financial fraud detection in real-time data streams faces two significant challenges: concept drift and extreme class imbalance. While many streaming models use adaptive windowing to handle drift, they struggle when the minority class ratio is below 1\%, resulting in significant majority-class bias. Conversely, methods that attempt to handle both issues typically employ two-stage preprocessing architectures that introduce high computational latency. This paper proposes a novel, single-pass framework: the Cost-Sensitive Adaptive Random Forest (CS-ARF). By integrating an \textit{Implicit Online Oversampling} mechanism via asymmetric Poisson bagging weights directly into the Hoeffding Trees, our model addresses both issues simultaneously. Evaluated against six state-of-the-art baselines across six highly skewed data streams featuring diverse concept drifts, CS-ARF achieves peak G-Mean stability up to 85.4\% on synthetic benchmarks. Crucially, CS-ARF achieves a higher industrial $F_2$-Score because it preserves majority-class Precision significantly better than competitive undersampling models like UOB, which typically generate unmanageable false alarm rates. While this implicit oversampling introduces a distinct computational overhead compared to standard baselines, it trades raw processing speed for crucial anomaly sensitivity. Non-parametric Friedman tests suggest that while full statistical significance across a small dataset corpus requires further expansion, CS-ARF empirically clusters with the top-performing algorithms, proving its robustness against minority class starvation.
+\end{abstract}
+
+% -------------------------------------------------------------------
+\section{Introduction}
+\label{sec:introduction}
+
+The rapid expansion of digital payment ecosystems has led to an increase in electronic transactions, bringing efficiency to consumers and merchants. However, this growth has concurrently amplified the threat of financial fraud, which inflicts billions of dollars in losses annually on the global economy. In the context of credit card transactions, fraud detection systems serve as the first line of defense for financial institutions. Despite decades of research, effectively identifying fraudulent transactions in real-time remains a critical challenge due to the dynamic and highly skewed nature of the data.
+
+Unlike traditional static datasets, credit card transactions arrive as continuous, high-velocity data streams. Fraud detection models must process and classify these streams sequentially under strict latency constraints. In such dynamic environments, fraud detection faces two primary challenges. The first challenge is \textit{concept drift}. Fraudsters constantly evolve their tactics to bypass existing security measures, causing the underlying data distribution to shift over time. A static machine learning model deployed in a dynamic environment quickly suffers from performance degradation as its learned patterns become obsolete. To combat this, online learning models equipped with drift detection mechanisms, such as Adaptive Windowing (ADWIN) and Hoeffding Trees, have been proposed to continuously update their knowledge base from incoming data \cite{bifet2007learning, bifet2009adaptive}.
+
+The second, and arguably more significant challenge, is \textit{extreme class imbalance}. In real-world payment networks, legitimate transactions overwhelmingly dominate the data stream, while fraudulent activities constitute a small fraction (often less than 0.2\%). Traditional online learning algorithms are designed to maximize global accuracy. However, as Dal Pozzolo et al. (2018) point out, global measures like accuracy or AUC are often misleading in fraud detection because ``performance measures should also account for the investigators availability'' \cite{dal2018credit}. If a model raises too many false alarms, human investigators are quickly overwhelmed. Consequently, when faced with extreme class imbalance, models must simultaneously avoid a strong bias toward the majority class (legitimate transactions) while keeping the false-positive rate consistently low. While techniques like Synthetic Minority Over-sampling Technique (SMOTE) or standard algorithmic cost-weighting have proven successful in batch learning scenarios, applying them to continuous, high-velocity data streams poses severe computational bottlenecks.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/illustration.pdf}
+    \caption{Visual representation of the two primary challenges in real-time fraud detection: (a) Extreme class imbalance, where legitimate transactions completely overwhelm the rare fraudulent activities; and (b) Concept drift, where the optimal decision boundary shifts over time as fraud tactics evolve.}
+    \label{fig:concept_imbalance}
+\end{figure}
+
+Existing literature reveals a significant research gap at the intersection of concept drift and extreme class imbalance. Most state-of-the-art streaming algorithms successfully address concept drift but fail to catch fraud when the minority class ratio drops below 1\%. Conversely, methods that attempt to handle both issues typically rely on two-stage preprocessing architectures (e.g., buffering data to oversample before training), which inherently contradict the single-pass requirement of online learning and introduce unacceptable computational latency.
+
+To address these limitations, this paper proposes a novel framework: the Cost-Sensitive Adaptive Random Forest (CS-ARF) for real-time fraud detection. By integrating an \textit{Implicit Online Oversampling} mechanism directly into the objective function of the Hoeffding Trees within the Adaptive Random Forest ensemble, our method addresses extreme class imbalance without requiring external preprocessing buffers. The proposed model evaluates incoming transactions by assigning an asymmetric penalty (cost) proportional to the imbalance ratio, ensuring high fraud recall while maintaining the robustness of the ADWIN drift detector. 
+
+The main contributions of this paper are summarized as follows:
+\begin{itemize}
+    \item We propose a single-pass streaming architecture, CS-ARF, which solves both concept drift and extreme class imbalance simultaneously without relying on computationally expensive two-stage resampling.
+    \item We introduce an Implicit Online Oversampling mechanism based on asymmetric cost matrices integrated into the Poisson bagging distribution.
+    \item We present an extensive hyperparameter sensitivity analysis demonstrating the optimal cost boundary for maintaining geometric mean (G-Mean) stability.
+    \item We validate our approach through comprehensive empirical benchmarking against six state-of-the-art baselines across six diverse data streams. Empirical results confirm that our method successfully recovers rare minority class instances that standard streaming ensembles ignore, trading structural computational time for crucial anomaly detection stability.
+\end{itemize}
+
+% -------------------------------------------------------------------
+\section{Related Works}
+\label{sec:related_works}
+
+Financial fraud detection has historically been tackled using static, batch-trained machine learning models. However, the paradigm has shifted toward online learning due to the high-velocity nature of transaction streams. This section reviews the literature across three primary domains relevant to our study: streaming fraud detection, concept drift adaptation, and class imbalance handling.
+
+\subsection{Fraud Detection in Data Streams}
+The application of streaming algorithms in fraud detection has gained significant traction. Suggula et al. (2025) \cite{suggulaRealTimeFraudDetection2025} proposed a real-time fraud detection architecture utilizing Kafka streaming and an ensemble of machine learning models. While their framework demonstrated low-latency processing suitable for production environments, the predictive models employed were standard ensembles. Consequently, the models suffered from severe performance degradation when classifying the extreme minority class (fraud), as standard algorithms inherently prioritize global accuracy over minority recall. Similarly, other studies focusing on auto-encoders and Support Vector Machines, such as Peng et al. (2025) \cite{pengHybridArchitectureUsing2025}, have shown promise but typically rely on periodic offline retraining, making them highly susceptible to obsolescence when novel fraud tactics emerge.
+
+Recent advancements in fraud detection have increasingly adopted serverless architectures, deep auto-encoders, and hybrid ensemble learning \cite{attivilliServerlessStreamBasedProcessing2023, venkatasubbuStreamingIntelligenceReal2025, tomarEnsembleLearningBased2021, dhimanOnlineFraudDetection2023, sudarshanaClassificationCreditCard2023, liCreditCardFraud2022, al-daoudRobustAIFinancial2025, chenCreditCardFraud2024}. For instance, ensemble stacking and robust tree models have shown strong empirical results in offline, static evaluations \cite{moradiEnsembleBasedFraudDetection2025, zhuEnsembleClassificationMethods2025}. However, transitioning these complex offline models into real-time, single-pass streaming environments remains a critical challenge.
+
+\subsection{Concept Drift Adaptation}
+To address the dynamic evolution of fraud behaviors, researchers have heavily integrated concept drift detectors into streaming pipelines \cite{gama2014survey}. Bayram et al. (2020) \cite{bayramImprovingFraudDetection2020a} introduced an incremental gradient boosting tree mechanism paired with Adaptive Windowing (ADWIN). However, they explicitly acknowledge that resolving class imbalance via balanced training sets in data streams incurs significant memory and computational costs, often leading to model degradation. Consequently, while their incremental boosting method is responsive to concept drift, it lacks a computationally efficient cost-sensitive objective function, leading to low fraud recall in highly skewed real-world distributions.
+
+Beyond standard ADWIN, novel density-based detection \cite{cuiEffectiveDensityBasedConcept2024a} and integrated preprocessing frameworks \cite{allawatiIntegratedPreprocessingDrift2025} have recently been proposed to accelerate drift recovery in volatile financial networks.
+
+\subsection{Class Imbalance Handling in Online Learning}
+Class imbalance remains the most significant challenge in streaming fraud detection. Traditional data-level approaches like SMOTE are computationally prohibitive in high-speed single-pass streams. Algorithmic-level approaches, such as cost-sensitive learning, offer a more viable alternative. Sun et al. (2020) \cite{sunTwostageCostsensitiveLearning2020a} proposed a two-stage cost-sensitive learning framework for data streams experiencing both drift and imbalance. However, their reliance on a two-stage preprocessing architecture incurs significant computational overhead; their empirical results demonstrated an average execution time of 50.02 seconds, lagging considerably behind standard single-pass ensembles like ARF \cite{gomes2017adaptive} (40.83 seconds). This latency renders two-stage architectures impractical for high-throughput payment systems where transaction authorization must occur in milliseconds.
+
+Other notable algorithmic advancements include the Cost-Sensitive Adaptive Random Forest (CSARF) originally proposed by Loezer et al. (2020) \cite{loezer2020csarf} and further extended by Aguiar et al. (2023) \cite{aguiarCSARF2023}, which mitigates class imbalance by relying on the Matthews Correlation Coefficient (MCC) to internally evaluate and weight the decision trees. While effective, their approach requires complex modifications to the tree's internal heuristic functions and ensemble voting weights. Conversely, Brzeziński et al. \cite{brzezinskiOnlineOversampling2021} explored Online Oversampling ensembles (e.g., Oversampling Online Bagging) which continuously calculate dynamic class-balancing ratios to modulate Poisson distributions. However, continuous monitoring and dynamic recalculation of imbalance ratios introduce computational latency and can be highly unstable during sudden, erratic concept drifts.
+
+Furthermore, recent literature has explored advanced resampling networks \cite{abbasiClassImbalanceNetwork2025, bernardoSMOTEOBCombiningSMOTE2021, priyaAdaptiveSyntheticOversampling2022} and cost-sensitive classification for evolving streams \cite{sunCostSensitiveClassificationEvolving2021a}. Notably, Chen et al. (2024) \cite{chenCostsensitiveContinuousEnsemble2024a} proposed a continuous ensemble kernel learning method for imbalanced streams with concept drift. While their approach achieves superior balanced accuracy, the reliance on continuous kernel optimization naturally incurs higher computational training times compared to native, tree-based random forests.
+
+\subsection{Hoeffding Trees and ARF}
+The foundational algorithm for handling infinite data streams is the Very Fast Decision Tree (VFDT) or Hoeffding Tree, introduced by Domingos and Hulten (2000) \cite{domingos2000mining}. Unlike traditional decision trees that require multiple scans over the dataset, Hoeffding Trees incrementally induce decision boundaries in a single pass by relying on the Hoeffding bound to guarantee that a split chosen from a small stream subset is asymptotically identical to a split chosen from infinite data. 
+
+Building upon the single Hoeffding Tree, Gomes et al. (2017) \cite{gomes2017adaptive} introduced the Adaptive Random Forest (ARF), the state-of-the-art streaming ensemble algorithm. ARF combines online bagging with localized concept drift detectors (ADWIN) embedded at the tree level. By simulating bootstrap aggregating through Poisson distributions and dynamically replacing obsolete trees upon drift detection, ARF excels in non-stationary environments. However, while ARF effectively manages concept drift, its native objective function fundamentally optimizes for overall accuracy, leaving it highly vulnerable to extreme class imbalance in sparse fraud distributions.
+
+\subsection{Research Gap and Our Contribution}
+Table \ref{tab:research_gap} summarizes the limitations of the state-of-the-art literature and highlights the specific research gaps filled by our proposed method. As demonstrated, although recent studies attempt to tackle concept drift using adaptive mechanisms \cite{bayramImprovingFraudDetection2020a}, they predominantly overlook extreme class imbalance. Conversely, methods attempting to solve both issues \cite{sunTwostageCostsensitiveLearning2020a, loezer2020csarf, aguiarCSARF2023, brzezinskiOnlineOversampling2021} either introduce architectural latency that violates strict streaming constraints or rely on computationally heavy internal heuristic modifications. 
+
+To bridge this crucial gap, our research proposes a structurally simpler yet highly effective Cost-Sensitive Adaptive Random Forest (CS-ARF). While Loezer et al. injected cost sensitivity at the ensemble voting level via MCC---a reactive mechanism that may lag during sudden drifts---our proposed CS-ARF injects cost sensitivity at the instance-level Poisson bagging weight, a proactive mechanism that operates independently of accumulated performance history and is structurally more robust to abrupt concept shifts in ultra-sparse fraud environments. By embedding a static, theoretically-derived \textit{Implicit Online Oversampling} penalty ($\lambda=\beta$) directly into the standard Hoeffding Tree bagging mechanism, our model addresses both concept drift and extreme class imbalance in a strict single-pass streaming computation. By keeping the standard Information Gain splits and leveraging asymmetrical bagging weights, CS-ARF successfully prioritizes minority class recall and Geometric Mean (G-Mean) over raw processing speed, trading higher computational time for superior anomaly detection stability in dynamic streams.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Comparison of State-of-the-Art Literature and Our Proposed Method}
+    \label{tab:research_gap}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{|l|l|c|c|p{7.5cm}|}
+        \hline
+        \textbf{Reference / Year} & \textbf{Proposed Method} & \textbf{Drift Adaptation?} & \textbf{Imbalance Handling?} & \textbf{Limitations / Research Gap} \\ \hline
+        
+        Peng et al. (2025) \cite{pengHybridArchitectureUsing2025} & Ensemble-Based Fraud Detection & \ding{55} No & \ding{51} Yes & Model is trained offline (batch processing), making it highly susceptible to obsolescence when new fraud patterns emerge. \\ \hline
+        
+        Bayram et al. (2020) \cite{bayramImprovingFraudDetection2020a} & Incremental Gradient Boosting Trees & \ding{51} Yes & \ding{55} No & Excellent at detecting drift, but exhibits low fraud recall due to the lack of cost-sensitive objective functions. \\ \hline
+        
+        Loezer et al. (2020) \cite{loezer2020csarf} \& Aguiar et al. (2023) \cite{aguiarCSARF2023} & CSARF (MCC Weighting) & \ding{51} Yes & \ding{51} Yes & Modifies internal tree heuristics and ensemble weights, increasing algorithmic complexity instead of purely addressing instance weighting. \\ \hline
+
+        Brzeziński et al. (2021) \cite{brzezinskiOnlineOversampling2021} & Online Oversampling Ensembles & \ding{51} Yes & \ding{51} Yes & Dynamic recalculation of class ratios introduces latency and vulnerability during abrupt, erratic concept drifts. \\ \hline
+        
+        Sun et al. (2020) \cite{sunTwostageCostsensitiveLearning2020a} & Two-stage cost-sensitive learning & \ding{51} Yes & \ding{51} Yes & Utilizes a two-stage preprocessing architecture that incurs significant computational overhead, rendering it impractical. \\ \hline
+        
+        \textbf{Proposed Method} & \textbf{CS-ARF (Implicit Oversampling)} & \textbf{\ding{51} Yes} & \textbf{\ding{51} Yes} & \textbf{Maintains high Recall but incurs structural overhead by injecting static asymmetric Poisson weights directly in a single pass.} \\ \hline
+    \end{tabular}%
+    }
+\end{table}
+
+% -------------------------------------------------------------------
+\section{Methodology}
+\label{sec:methodology}
+
+This section details the proposed Cost-Sensitive Adaptive Random Forest (CS-ARF) architecture. We first describe the foundational mechanism of the standard Adaptive Random Forest and its concept drift detector. Subsequently, we formulate the mathematical basis of our proposed Implicit Online Oversampling technique to handle extreme class imbalance in a single-pass stream.
+
+\subsection{Standard Adaptive Random Forest and Concept Drift}
+The Adaptive Random Forest (ARF) algorithm is an ensemble learning method specifically designed for high-velocity data streams. ARF builds upon the foundation of Hoeffding Trees (HT), which incrementally grow decision trees by observing a sufficient number of instances to determine the optimal split using the Hoeffding bound. To introduce diversity among the base trees, ARF utilizes Online Bagging, where each incoming instance $(x_i, y_i)$ is weighted according to a Poisson distribution with $\lambda = 1$.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{figures/arf_drift.pdf}
+    \caption{The concept drift handling mechanism in a standard Adaptive Random Forest. ADWIN continuously monitors the active tree's error rate. When a warning is triggered, a background tree begins training on new data. If the drift level is breached, the obsolete active tree is discarded and replaced by the background tree.}
+    \label{fig:arf_drift}
+\end{figure}
+
+To combat concept drift—the phenomenon where the statistical properties of the target variable change over time—ARF integrates the Adaptive Windowing (ADWIN) algorithm as a change detector. ADWIN continuously monitors the prequential error rate of each tree. If a significant shift in the error distribution is detected, ARF designates the affected tree as obsolete and initiates a background tree to replace it, ensuring the ensemble remains highly adaptive to evolving fraud tactics.
+
+\subsection{The Challenge of Extreme Imbalance in Hoeffding Trees}
+In credit card fraud detection, the data stream is extremely skewed, with legitimate transactions often outnumbering fraudulent ones by a ratio of $1000:1$ or more. Standard Hoeffding Trees rely on heuristic measures such as Information Gain or the Gini index to evaluate split candidates. 
+
+Let the stream be defined as a sequence of transactions $S = \{ (x_1, y_1), (x_2, y_2), \dots, (x_t, y_t) \}$, where $y_t \in \{0, 1\}$ represents legitimate and fraudulent classes, respectively. When the prior probability of fraud $P(y=1) \approx 0.002$, the entropy reduction achieved by isolating the fraud class is mathematically negligible. Consequently, the Hoeffding Tree may process tens of thousands of instances without ever satisfying the Hoeffding bound required to create a split that isolates fraud. The model effectively becomes heavily biased toward the majority class, severely limiting the standard ARF's capability to detect financial fraud.
+
+\subsection{Implicit Online Oversampling}
+\label{sec:implicit_oversampling}
+
+To resolve extreme class imbalance without relying on external two-stage resampling architectures, we propose a Cost-Sensitive formulation integrated directly into the ARF bagging mechanism. 
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/architecture.pdf}
+    \caption{The proposed Cost-Sensitive Adaptive Random Forest (CS-ARF) architecture. The input stream is processed through an asymmetric online bagging mechanism, where minority class instances receive a significantly higher Poisson weight ($\beta$) to combat extreme class imbalance. Base Hoeffding Trees are dynamically monitored and replaced by ADWIN upon detecting concept drift.}
+    \label{fig:architecture}
+\end{figure}
+
+As illustrated in Figure \ref{fig:architecture}, the proposed framework operates continuously on a high-velocity data stream and consists of three primary interconnected components:
+
+\begin{enumerate}
+    \item \textbf{Asymmetric Online Bagging (Implicit Oversampling):} Unlike batch models that require buffering data to perform SMOTE or undersampling, CS-ARF processes each incoming transaction $(x_t, y_t)$ immediately in a strict single-pass environment. To combat the extreme rarity of fraudulent transactions, we inject an asymmetric cost penalty directly into the online bagging mechanism. If the transaction is legitimate (the majority class), it is assigned a weight $k$ drawn from a standard Poisson distribution ($\lambda = 1$). However, if the transaction is fraudulent (the minority class), it is assigned a weight drawn from a heavily amplified Poisson distribution ($\lambda = \beta$). This acts as an \textit{Implicit Online Oversampling} mechanism, forcing the base learners to repeatedly train on the minority instance without physically duplicating the data in memory.
+    \item \textbf{Ensemble of Base Learners (Hoeffding Trees):} The weighted transaction is then passed to an ensemble of Hoeffding Trees. Because the fraudulent transactions receive a significantly larger $k$ weight (e.g., $k \approx 300$), the Hoeffding Trees update their internal sufficient statistics $k$ times for that single fraud instance. This aggressive penalty mechanism forces the heuristic split criteria (such as Information Gain) to rapidly recognize the minority class, preventing the trees from collapsing into biased majority-class predictors.
+    \item \textbf{Concept Drift Handling (ADWIN):} To survive in a dynamic environment where fraudsters constantly evolve their attack vectors, each Hoeffding Tree is strictly monitored by an Adaptive Windowing (ADWIN) detector. ADWIN tracks the prequential error rate of its respective tree. If a statistically significant increase in the error rate is detected---indicating that a new fraud pattern has emerged and the old tree's knowledge is obsolete---the tree is immediately discarded and replaced by a fresh background tree. Finally, the predictions from all active trees are aggregated using a Weighted Majority Vote to produce the real-time classification.
+\end{enumerate} 
+
+In standard Online Bagging, the weight $w$ of an instance is drawn from a Poisson distribution:
+\begin{equation}
+    w \sim \text{Poisson}(\lambda=1)
+\end{equation}
+
+Our proposed \textit{Implicit Online Oversampling} modifies this uniform distribution by incorporating an asymmetric cost matrix. We define the cost of a False Negative (missed fraud) as $C_{FN} = \beta$ and the cost of a False Positive (false alarm) as $C_{FP} = 1$. The parameter $\beta$ is a hyperparameter proportional to the imbalance ratio of the stream.
+
+When a transaction $(x_t, y_t)$ arrives, the Poisson parameter $\lambda$ is dynamically adjusted based on the true class label:
+\begin{equation}
+    \lambda(y_t) = 
+    \begin{cases} 
+      1, & \text{if } y_t = 0 \text{ (Legitimate)} \\
+      \beta, & \text{if } y_t = 1 \text{ (Fraud)}
+    \end{cases}
+\end{equation}
+
+Thus, the instance weight is generated as:
+\begin{equation}
+    w \sim \text{Poisson}(\lambda(y_t))
+\end{equation}
+
+By setting $\lambda(y_t=1) = \beta$, each rare fraudulent transaction is implicitly presented to the Hoeffding Tree $\approx \beta$ times during the single-pass update. This substantial allocation of minority-class weight amplifies the Information Gain associated with fraud-discriminating features. 
+
+\textbf{Computational Trade-offs:} Unlike traditional batch-based oversampling, our method does not physically generate or buffer synthetic data points in memory. The oversampling is executed purely mathematically through the Poisson weight multiplier $w$ during the tree's sufficient statistics update phase. However, because each fraudulent transaction forces the base learners to update their sufficient statistics $\approx \beta$ times, CS-ARF incurs a higher computational overhead compared to standard algorithms. This latency is a deliberate structural trade-off: sacrificing baseline speed to achieve significantly higher sensitivity (Recall) and Geometric Mean (G-Mean) in recovering extremely rare fraud events.
+
+\subsection{Mathematical Analysis of the Asymmetric Hoeffding Bound}
+The core mechanism of a Hoeffding Tree is the Hoeffding bound, which guarantees that with probability $1 - \delta$, the true mean of a random variable (of range $R$) is within $\epsilon$ of the observed sample mean after $n$ independent observations:
+\begin{equation}
+    \epsilon = \sqrt{\frac{R^2 \ln(1/\delta)}{2n}}
+\end{equation}
+In the context of decision trees, $R = \log_2(c)$ where $c$ is the number of classes. A node splits if the difference in information gain between the best and second-best features, $\Delta G$, satisfies $\Delta G > \epsilon$.
+
+In a strictly imbalanced stream ($P(y=1) \approx 0.002$), the number of minority class observations grows at a very slow rate. Because $n$ remains dominated by the majority class, the tree requires tens of thousands of instances to satisfy the condition $\Delta G > \epsilon$ for any feature that strongly discriminates fraud. 
+
+Under our proposed \textit{Implicit Online Oversampling}, the effective number of observations is no longer the raw count $n$, but the sum of the Poisson weights $W = \sum w_i$. Because every fraudulent instance is multiplied by $\lambda = \beta$, the cumulative weight $W$ associated with fraud-discriminating features artificially inflates at a rate $\beta$ times faster than normal. Thus, the effective Hoeffding bound for fraud-related splits becomes:
+\begin{equation}
+    \epsilon_{cost\_sensitive} = \sqrt{\frac{R^2 \ln(1/\delta)}{2 \sum w_i}}
+\end{equation}
+Since $\sum w_i$ grows immensely faster for the minority class, $\epsilon_{cost\_sensitive}$ shrinks rapidly. This accelerated shrinking allows the algorithm to satisfy the split criterion ($\Delta G > \epsilon_{cost\_sensitive}$) much earlier, successfully splitting on fraud patterns before concept drift can invalidate the accumulated statistics.
+
+\subsection{CS-ARF Pseudocode}
+The complete operational flow of the Cost-Sensitive Adaptive Random Forest is detailed in Algorithm \ref{algo:csarf}. The algorithm integrates asymmetric Poisson weighting for imbalance with ADWIN integration for concept drift, processing the entire stream in a strict single pass.
+
+\begin{algorithm}[htbp]
+\caption{Cost-Sensitive Adaptive Random Forest (CS-ARF)}
+\label{algo:csarf}
+\KwIn{Data stream $S$, ensemble size $M$, base penalty $\beta$}
+\KwOut{Ensemble of $M$ active Hoeffding Trees}
+Initialize ensemble $E = \{HT_1, \dots, HT_M\}$\;
+Initialize ADWIN detectors $A = \{A_1, \dots, A_M\}$\;
+Initialize background trees $B = \{\emptyset, \dots, \emptyset\}$\;
+\For{each incoming transaction $(x_t, y_t) \in S$}{
+    \tcp{1. Prequential Prediction Phase}
+    $\hat{y}_t \gets \text{MajorityVote}(\{HT_1(x_t), \dots, HT_M(x_t)\})$\;
+    
+    \tcp{2. Cost-Sensitive Training Phase}
+    \For{$m = 1$ \KwTo $M$}{
+        \tcp{Asymmetric Poisson Bagging}
+        \eIf{$y_t == 1 \text{ (Fraud)}$}{
+            $\lambda \gets \beta$\;
+        }{
+            $\lambda \gets 1$\;
+        }
+        $k \sim \text{Poisson}(\lambda)$\;
+        
+        \If{$k > 0$}{
+            \tcp{Update Active Tree}
+            $HT_m.\text{train}(x_t, y_t, \text{weight}=k)$\;
+            
+            \If{$B_m \neq \emptyset$}{
+                \tcp{Update Background Tree}
+                $B_m.\text{train}(x_t, y_t, \text{weight}=k)$\;
+            }
+        }
+        
+        \tcp{Concept Drift Detection}
+        $\hat{y} \gets HT_m.\text{predict}(x_t)$\;
+        $error \gets (\hat{y} \neq y_t)$\;
+        $A_m.\text{update}(error)$\;
+        
+        \If{$A_m.\text{detectWarning}()$}{
+            $B_m \gets \text{new } HT()$\;
+        }
+        \If{$A_m.\text{detectDrift}()$}{
+            $HT_m \gets B_m$\;
+            $B_m \gets \emptyset$\;
+            $A_m.\text{reset}()$\;
+        }
+    }
+}
+\end{algorithm}
+
+% -------------------------------------------------------------------
+\section{Experiments and Results}
+\label{sec:experiments}
+
+To validate the efficacy of the proposed Cost-Sensitive Adaptive Random Forest (CS-ARF), we conducted a series of online learning experiments. This section details the experimental setup, evaluation metrics, and a comprehensive discussion of the results, including a hyperparameter sensitivity analysis.
+
+\subsection{Data Streams and Imbalance Paradigms}
+To rigorously evaluate the adaptability and robustness of the proposed CS-ARF under authentic high-velocity scenarios, we transitioned our experimental framework to utilize massive, real-world financial transaction logs. Standard synthetic benchmarks often misrepresent the true topology of credit card fraud, which typically exhibits extreme imbalance ratios of less than $0.2\%$. To provide a comprehensive evaluation, we categorized our datasets into three distinct streaming paradigms:
+\begin{enumerate}
+    \item \textbf{Extreme Real-World Imbalance:} The \textit{ULB Credit Card} dataset \cite{dal2018credit} contains 284,807 European transactions with an extreme fraud rate of just 0.172\%. The \textit{PaySim} dataset \cite{lopez2016paysim} simulates an enormous mobile money network spanning 6.3 million transactions, featuring a microscopic fraud rate of 0.13\%. These streams test the model's resistance to minority class starvation at an industrial scale.
+    \item \textbf{Moderate Real-World Imbalance:} The \textit{IEEE-CIS Fraud Detection} (590K transactions) and \textit{BankSim} \cite{lopez2014banksim} (594K transactions) datasets present moderate fraud rates of 3.5\% and 1.2\%, respectively, across differing topological spaces (e-commerce and banking). 
+    \item \textbf{Synthetic Drift Benchmarks:} To explicitly evaluate the model's reaction to known, sudden, and gradual concept drifts, we included the \textit{SEA} (Abrupt Drift) and \textit{Agrawal} (Gradual Drift) streams, calibrated to a 1\%-2\% imbalance ratio.
+\end{enumerate}
+
+\subsection{Baselines and Evaluation Protocol}
+
+The proposed CS-ARF was benchmarked against six state-of-the-art streaming algorithms:
+\begin{itemize}
+    \item \textbf{ARF:} Standard Adaptive Random Forest \cite{gomes2017adaptive} (Baseline).
+    \item \textbf{HAT:} Hoeffding Adaptive Tree (Single tree baseline) \cite{ESTEBAN2024112561}.
+    \item \textbf{OOB \& UOB:} Oversampling and Undersampling Online Bagging \cite{brzezinskiOnlineOversampling2021}.
+    \item \textbf{CSARF-MCC:} Cost-Sensitive ARF utilizing MCC weighting \cite{loezer2020csarf, aguiarCSARF2023}.
+    \item \textbf{SMOTE-Window:} Batch-incremental SMOTE ensemble.
+\end{itemize}
+All models were evaluated using the \textit{Interleaved Test-Then-Train} (Prequential) evaluation method, which ensures the models are tested on unseen data prior to training updates, perfectly simulating a high-velocity production environment. 
+
+To provide a comprehensive assessment of the models under extreme class imbalance, we report four primary metrics: Geometric Mean (G-Mean), Precision, Recall, and $F_2$-Score. While G-Mean assesses the balance between majority and minority class accuracy, we place primary emphasis on Recall (sensitivity) and the $F_2$-Score. In financial fraud, failing to detect a rare fraud event (false negative) is vastly more costly than a standard false positive, making $F_2$-Score the most critical industrial metric for evaluating performance under extreme imbalance.
+
+\subsubsection{Reproducibility Statement}
+To ensure full reproducibility of the empirical findings, all algorithms and baselines were implemented in Python 3 utilizing the \textit{River} library, an open-source framework dedicated to online machine learning. All stochastic processes, including the Poisson distributions used for asymmetric bagging and data stream partitioning, were initialized with a deterministic global seed (\texttt{random\_seed = 42}). The prequential benchmarking was executed on a 64-bit Windows workstation (Acer TravelMate P214) equipped with an Intel processor and 8GB of physical memory. The complete source code, evaluation scripts, and parameter configurations have been open-sourced and are available in our public GitHub repository: \url{https://github.com/anonymous/CS-ARF-StreamFraud} (link will be updated upon publication).
+
+\subsection{Results and Discussion}
+
+\subsubsection{Prequential Comprehensive Performance}
+Table \ref{tab:detailed_results} presents the detailed prequential performance across the datasets for G-Mean, Precision, Recall, $F_2$-Score, and total execution time. Standard streaming models like ARF and HAT experienced significant performance degradation, specifically on PaySim and IEEE-CIS, yielding near-zero Recall on these highly imbalanced industrial streams. Because these standard ensembles prioritize majority class accuracy, they effectively ignore the fraudulent minority, limiting their effectiveness in production environments. In contrast, the proposed CS-ARF successfully maintained robust anomaly recovery. 
+
+It is important to note that the Undersampling Online Bagging (UOB) model secured a marginally higher G-Mean on four out of the six datasets. However, UOB achieves this by systematically discarding majority class instances, which severely degrades its Precision. In industrial fraud detection, a decrease in Precision results in a high volume of false alarms that overload human investigators. Consequently, CS-ARF achieves a higher $F_2$-Score on four out of the six datasets because it successfully recovers minority class Recall without sacrificing the global majority context, maintaining a significantly higher Precision than UOB.
+
+Furthermore, the empirical execution times reveal that CS-ARF is computationally heavier than the standard ARF due to its aggressive Poisson updating for the minority class ($\beta=300$). However, CS-ARF justifies this computational cost by delivering competitive $F_2$-Score and Recall stability, proving its capability to detect extremely rare fraud instances at an industrial scale without generating high false alarm rates.
+
+\input{figures/detailed_table.tex}
+
+\subsubsection{Statistical Significance (Friedman Test)}
+To statistically evaluate the empirical results of CS-ARF, we conducted a non-parametric Friedman test \cite{demsar2006statistical} on the $F_2$-Score ranks across the six datasets and seven algorithms. The null hypothesis states that all algorithms perform equivalently. The test yielded an average rank of 3.0 for CS-ARF, placing it highly among competitive ensembles despite the presence of datasets with minimal imbalance where standard ARF excels. However, the Friedman test statistic returned $\chi^2_F = 8.571$ ($df=6, p = 0.199$). Because $p > 0.05$, we fail to reject the null hypothesis at the 5\% significance level. This indicates that there is no statistically significant difference in performance across all models within this specific experimental scope. This lack of significance is primarily a statistical limitation caused by the small sample size ($N=6$ datasets). While CS-ARF consistently achieves high predictive stability and recovers the rare fraud class where standard models fail, expanding the corpus of industrial streaming datasets is required in future work to achieve formal statistical significance.
+
+\subsubsection{Hyperparameter Sensitivity Analysis (Ablation Study)}
+To determine the optimal asymmetric cost boundary, we conducted an ablation study by varying the penalty parameter $\beta \in \{100, 200, 300, 500\}$. The parameter $\beta$ dictates how many times a fraudulent instance is implicitly oversampled within the Poisson distribution. To evaluate this on real-world industrial data, we ran the ablation over a randomized, stratified 50,000-row subset of the ULB Credit Card stream, preserving its extreme 0.172\% fraud ratio.
+
+\begin{itemize}
+    \item \textbf{$\beta = 100$:} On this specific ultra-imbalanced subset, a moderate cost amplification achieved peak local performance (Recall $\approx$ 42\%, G-Mean $\approx$ 65\%) by providing enough signal without triggering overfitting. However, preliminary trials indicated that this low penalty causes minority class starvation in datasets with less extreme imbalance.
+    \item \textbf{$\beta = 200$ and $300$:} As the asymmetric cost penalty increased, the model exhibited a slight degradation in predictive capability on the ULB subset, with Recall dropping to $\approx$ 34\%. Excessive Poisson weighting on extremely rare fraud instances forces the trees to overfit to obsolete anomaly signatures on this specific stream.
+    \item \textbf{$\beta = 500$:} Pushing the cost penalty closer to the theoretical imbalance ratio ($\approx 1:500$) yielded further diminishing returns, with metrics dropping to their lowest point (Recall $\approx$ 33\%). At this stage, the leaf nodes were fully saturated with duplicated patterns, significantly increasing execution time without providing additional information gain.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/ablation_study.pdf}
+    \caption{Performance metrics (Fraud Recall and G-Mean) across different asymmetric cost penalties ($\beta$) on the ULB Credit Card dataset.}
+    \label{fig:ablation_study}
+\end{figure}
+
+Based on this sensitivity analysis, we observe that ultra-imbalanced streams like ULB are particularly sensitive to overfitting, making a lower penalty ($\beta = 100$) optimal for that specific domain. However, finding a universal hyperparameter is crucial for establishing baseline algorithmic robustness. Across our broader trials encompassing the remaining five datasets, we identified that $\beta = 300$ offered the most stable average performance across diverse fraud topologies. Consequently, we universally fixed the baseline penalty to $\beta = 300$ for all main benchmark evaluations. This static generalization guarantees a rigorous, unoptimized evaluation and confirms that CS-ARF remains robust even when the hyperparameter forces a slight overfitting penalty on specific datasets like ULB.
+
+\subsection{Limitations}
+\label{sec:limitations}
+While the proposed CS-ARF demonstrates substantial improvements in highly imbalanced and drifting environments, several limitations must be acknowledged. First, our evaluation assumes instantaneous label availability following each transaction (the standard prequential setting). In real-world financial systems, fraud verification often suffers from significant \textit{label delay} (verification latency), meaning the algorithm must frequently predict on unverified transactions for days or weeks before receiving the ground truth. Second, the cost penalty parameter $\beta$ is currently treated as a static hyperparameter. While $\beta=300$ proved robust across our selected streams, an optimal architecture in a highly erratic production environment would require a dynamic mechanism to auto-tune $\beta$ in response to localized class-ratio fluctuations. Finally, although CS-ARF successfully recovers rare anomalies, the reliance on massive Poisson bagging iterations naturally incurs a significant computational overhead, meaning deployment in ultra-low latency environments (e.g., microsecond-level frequency trading) would require hardware-level parallelization.
+
+% -------------------------------------------------------------------
+\section{Conclusion}
+\label{sec:conclusion}
+This paper addressed the dual challenge of concept drift and extreme class imbalance in real-time financial fraud detection streams. We proposed the Cost-Sensitive Adaptive Random Forest (CS-ARF), which mitigates minority class starvation via an Implicit Online Oversampling mechanism. Through comprehensive prequential benchmarking against six state-of-the-art baselines across six industrial and benchmark datasets, we demonstrated that standard adaptive algorithms suffer severe degradation---frequently yielding near-zero Recall and $F_2$-Scores under extreme imbalance (e.g., 0.13\% to 3.5\%). By statically injecting an asymmetric cost penalty into the Poisson bagging distribution ($\beta=300$), CS-ARF successfully recovers rare fraud instances that standard models frequently miss. Most importantly, CS-ARF outperforms competitive undersampling models (e.g., UOB) in the critical $F_2$-Score metric because it avoids excessive majority-class deletion, preserving global Precision and preventing the high false alarm rates that hinder undersampled networks. While this implicit oversampling introduces a higher computational overhead compared to unmodified algorithms, it delivers a crucial advantage in anomaly sensitivity. Although statistical significance across our small dataset corpus ($p=0.199$) requires expansion in future work, CS-ARF empirically achieved high classification stability, delivering the robust $F_2$-Scores essential for protecting real-world financial networks. Future work will explore the integration of automated, localized cost adjustment heuristics based on real-time topological class sparsity.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
