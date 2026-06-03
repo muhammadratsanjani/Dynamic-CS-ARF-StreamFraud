@@ -1,3 +1,4 @@
+# LaTeX & Document files
 *.aux
 *.bbl
 *.blg
@@ -6,5 +7,27 @@
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+*.tex
+*.pdf
+*.bib
+*.md
+*.txt
+!requirements.txt
+!README.md
+
+# Virtual Environment & Python cache
+env/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Data and Literature
 data/
 *.csv
+references/
+*.ris
+
+# Temporary files
+temp*
+draft_*
+uncited*
