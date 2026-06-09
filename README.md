@@ -77,20 +77,6 @@ To generate the non-parametric statistical significance tests (Friedman Test):
 python src/statistical_test.py
 ```
 
-## Citation
-
-If you find this code or our methodology useful in your research, please consider citing our paper (BibTeX will be updated upon publication):
-
-```bibtex
-@article{ratsanjani2026csarf,
-  title={Cost-Sensitive Adaptive Random Forest for Real-Time Fraud Detection in Imbalanced Data Streams},
-  author={Ratsanjani, M. Hasyim and Suhartanto, Heru},
-  journal={Knowledge-Based Systems},
-  year={2026},
-  note={Submitted for publication}
-}
-```
-
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
