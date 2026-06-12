@@ -3,11 +3,16 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This repository contains the official source code and reproducibility scripts for the manuscript: 
-**"Cost-Sensitive Adaptive Random Forest for Real-Time Fraud Detection in Imbalanced Data Streams"** (Submitted to *Knowledge-Based Systems*).
+The **Dynamic Cost-Sensitive Adaptive Random Forest (Dynamic CS-ARF)** is an online machine learning ensemble designed specifically to tackle the dual challenges of extreme class imbalance and concept drift in continuous financial data streams.
 
-## Overview
-CS-ARF is a streaming machine learning algorithm designed to combat the dual challenge of **concept drift** and **extreme class imbalance** (e.g., $< 1\%$ anomaly ratio) in high-velocity data streams. By injecting a theoretically grounded *Implicit Online Oversampling* penalty (asymmetric Poisson bagging) into the Hoeffding Trees, CS-ARF recovers rare minority instances (such as financial fraud) without the computational latency of two-stage preprocessing architectures.
+By integrating an Exponential Moving Average (EMA) to track real-time Imbalance Ratio ($IR_t$) and an ADWIN detector to track Drift Confidence ($D_t$), Dynamic CS-ARF dynamically modulates an asymmetric Poisson bagging penalty for minority class instances.
+
+The full theoretical formulation, implementation details, and empirical benchmarking results against state-of-the-art baselines on six industrial datasets can be found in our comprehensive manuscript: [**main_manuscript.pdf**](./main_manuscript.pdf).
+
+## Features
+- **Dynamic Implicit Online Oversampling:** Mathematically oversamples rare fraud instances in real-time via dynamic Poisson weight ($\lambda_t$).
+- **Strict Single-Pass Execution:** Requires no data buffering or physical minority class duplication, operating in strict $O(1)$ memory per instance.
+- **Robust against Concept Drift:** Replaces obsolete background trees when prequential error spikes.
 
 ## Repository Structure
 
