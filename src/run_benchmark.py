@@ -12,6 +12,7 @@ try:
     from river.datasets import synth
     from river.tree import HoeffdingAdaptiveTreeClassifier
     from river.ensemble import AdaptiveRandomForestClassifier
+    from river import drift
 except ImportError:
     print("River package not installed yet. Waiting for pip install...")
     exit(1)
@@ -43,14 +44,45 @@ class ImbalancedStream:
             except StopIteration:
                 break
 
-# CS-ARF Wrapper
+# Dynamic CS-ARF Wrapper
 class CSARF:
-    def __init__(self, beta=300):
-        self.beta = beta
+    def __init__(self, gamma=2.0, alpha=0.999, theta=0.99):
+        self.gamma = gamma
+        self.alpha = alpha
+        self.theta = theta
         self.model = AdaptiveRandomForestClassifier(n_models=10, seed=42)
         
+        self.count_maj = 0.0
+        self.count_min = 0.0
+        
+        self.adwin = drift.ADWIN()
+        self.d_t = 0.0
+        
     def learn_one(self, x, y):
-        k = np.random.poisson(self.beta if y == 1 else 1)
+        # Update Imbalance Ratio (IR_t)
+        self.count_maj = self.alpha * self.count_maj + (1 if y == 0 else 0)
+        self.count_min = self.alpha * self.count_min + (1 if y == 1 else 0)
+        
+        min_count = max(1e-5, self.count_min)
+        ir_t = self.count_maj / min_count
+        
+        # Update Drift Confidence (D_t)
+        y_pred = self.model.predict_one(x)
+        error = 0.0 if y_pred == y else 1.0
+        self.adwin.update(error)
+        
+        if self.adwin.change_detected:
+            self.d_t = 1.0
+        else:
+            self.d_t = self.theta * self.d_t
+            
+        # Calculate dynamic lambda_t
+        if y == 1:
+            lambda_t = min(1000.0, ir_t * (1.0 + self.gamma * self.d_t))
+            k = np.random.poisson(max(1.0, lambda_t))
+        else:
+            k = np.random.poisson(1.0)
+            
         for _ in range(k):
             self.model.learn_one(x, y)
         return self
@@ -210,7 +242,7 @@ def run_benchmark():
     datasets = ["ULB", "PaySim", "IEEE-CIS", "BankSim", "SEA", "Agrawal"]
     
     models = [
-        ("CS-ARF (Proposed)", CSARF, {"beta": 300}),
+        ("Dynamic CS-ARF (Proposed)", CSARF, {"gamma": 2.0, "alpha": 0.999}),
         ("ARF (Standard)", AdaptiveRandomForestClassifier, {"n_models": 10, "seed": 42}),
         ("HAT", HoeffdingAdaptiveTreeClassifier, {"seed": 42}),
         ("OOB", OOB, {}),
@@ -235,7 +267,7 @@ def run_benchmark():
     
     for d_name in datasets:
         subset = df_raw[df_raw["Dataset"] == d_name]
-        cs_arf = subset[subset["Model"] == "CS-ARF (Proposed)"].iloc[0]
+        cs_arf = subset[subset["Model"] == "Dynamic CS-ARF (Proposed)"].iloc[0]
         arf = subset[subset["Model"] == "ARF (Standard)"].iloc[0]
         
         final_results.append({
