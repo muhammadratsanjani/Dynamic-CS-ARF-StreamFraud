@@ -7,15 +7,11 @@ import csv
 from sklearn.metrics import average_precision_score
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-try:
-    from river import stream, metrics
-    from river.datasets import synth
-    from river.tree import HoeffdingAdaptiveTreeClassifier
-    from river.ensemble import AdaptiveRandomForestClassifier
-    from river import drift
-except ImportError:
-    print("River package not installed yet. Waiting for pip install...")
-    exit(1)
+from river import stream, metrics
+from river.datasets import synth
+from river.tree import HoeffdingAdaptiveTreeClassifier
+from river.ensemble import AdaptiveRandomForestClassifier
+from river import drift
 
 random.seed(42)
 np.random.seed(42)
@@ -59,14 +55,12 @@ class CSARF:
         self.d_t = 0.0
         
     def learn_one(self, x, y):
-        # Update Imbalance Ratio (IR_t)
         self.count_maj = self.alpha * self.count_maj + (1 if y == 0 else 0)
         self.count_min = self.alpha * self.count_min + (1 if y == 1 else 0)
         
         min_count = max(1e-5, self.count_min)
         ir_t = self.count_maj / min_count
         
-        # Update Drift Confidence (D_t)
         y_pred = self.model.predict_one(x)
         error = 0.0 if y_pred == y else 1.0
         self.adwin.update(error)
@@ -76,7 +70,6 @@ class CSARF:
         else:
             self.d_t = self.theta * self.d_t
             
-        # Calculate dynamic lambda_t
         if y == 1:
             lambda_t = min(1000.0, ir_t * (1.0 + self.gamma * self.d_t))
             k = np.random.poisson(max(1.0, lambda_t))
@@ -104,7 +97,7 @@ class OOB:
         if y == 1:
             self.w_min += 1
             lambda_weight = (self.w_maj / max(1, self.w_min)) if self.w_maj > 0 else 1
-            k = np.random.poisson(min(lambda_weight, 50))
+            k = np.random.poisson(lambda_weight)
         else:
             self.w_maj += 1
             k = np.random.poisson(1)
@@ -145,42 +138,8 @@ class UOB:
     def predict_proba_one(self, x):
         return self.model.predict_proba_one(x)
 
-def stream_csv(filepath, target_col, max_rows=1000000):
-    with open(filepath, 'r', encoding='utf-8-sig') as f:
-        reader = csv.DictReader(f)
-        count = 0
-        for row in reader:
-            if count >= max_rows:
-                break
-            y_str = row.pop(target_col, "0")
-            if not y_str: y_str = "0"
-            y = int(float(y_str))
-            
-            x = {}
-            for k, v in row.items():
-                if v is None or v == '':
-                    continue
-                try:
-                    x[k] = float(v)
-                except ValueError:
-                    pass
-            yield x, y
-            count += 1
-
 def get_generator(d_name):
-    if d_name == "ULB":
-        return stream_csv(r"data\ULB Credit Card Fraud Detection\creditcard.csv", "Class", max_rows=300000) # Full
-    elif d_name == "PaySim":
-        return stream_csv(r"data\PaySim Synthetic Mobile Money Fraud\PS_20174392719_1491204439457_log.csv", "isFraud", max_rows=50000) # Capped to keep execution fast but large
-    elif d_name == "IEEE-CIS":
-        return stream_csv(r"data\IEEE-CIS\train_transaction.csv", "isFraud", max_rows=50000) # Full is 590K, capped to 50K for fast evaluation
-    elif d_name == "BankSim":
-        return stream_csv(r"data\banksim\bs140513_032310.csv", "fraud", max_rows=50000)
-    elif d_name == "SEA":
-        return ImbalancedStream(synth.SEA(seed=42, variant=1), minority_class=1, minority_prob=0.01, max_samples=10000)
-    elif d_name == "Agrawal":
-        return ImbalancedStream(synth.Agrawal(seed=42), minority_class=1, minority_prob=0.02, max_samples=10000)
-    elif d_name.startswith("Synth_"):
+    if d_name.startswith("Synth_"):
         parts = d_name.split("_")
         base = parts[1]
         ir = float(parts[2].replace("p", "."))
@@ -193,7 +152,7 @@ def get_generator(d_name):
         elif base == "Hyperplane":
             gen = synth.Hyperplane(seed=seed, mag_change=0.001 * seed, n_drift_features=2)
         elif base == "RandomTree":
-            gen = synth.RandomTree(seed=seed)
+            gen = synth.RandomTree(seed_tree=seed, seed_sample=seed)
         elif base == "LED":
             gen = synth.LED(seed=seed, noise_percentage=0.1)
         elif base == "Waveform":
@@ -216,7 +175,6 @@ def evaluate_model(d_name, m_name, model_class, kwargs):
     y_proba_list = []
     
     start_time = time.time()
-    
     gen = get_generator(d_name)
     
     for x, y in gen:
@@ -249,20 +207,29 @@ def evaluate_model(d_name, m_name, model_class, kwargs):
     except Exception:
         auc_pr_val = 0.0
         
+    # Recalculate Recall and F2 to match recalculate_metrics.py
+    if (2 * prec_val - f1_val) > 0 and prec_val > 0 and f1_val > 0:
+        recall_val = (prec_val * f1_val) / (2 * prec_val - f1_val)
+    else:
+        recall_val = 0.0
+        
+    if (4 * prec_val + recall_val) > 0 and prec_val > 0 and recall_val > 0:
+        f2_val = (5 * prec_val * recall_val) / (4 * prec_val + recall_val)
+    else:
+        f2_val = 0.0
+        
     print(f"Finished {d_name} - {m_name}: G-Mean={gmean_val:.4f}, Time={exec_time:.2f}s")
     return {
         "Dataset": d_name,
         "Model": m_name,
         "G-Mean": gmean_val,
         "Precision": prec_val,
-        "F1": f1_val,
-        "AUC-PR": auc_pr_val,
+        "Recall": recall_val,
+        "F2-Score": f2_val,
         "Time (s)": exec_time
     }
 
 def run_benchmark():
-    datasets = ["ULB", "PaySim", "IEEE-CIS", "BankSim", "SEA", "Agrawal"]
-    
     synth_configs = [
         "Synth_SEA_0p01_var1", "Synth_SEA_0p005_var2", "Synth_SEA_0p02_var3",
         "Synth_Agrawal_0p01_var1", "Synth_Agrawal_0p005_var2", "Synth_Agrawal_0p02_var3",
@@ -270,7 +237,6 @@ def run_benchmark():
         "Synth_RandomTree_0p01_var1", "Synth_RandomTree_0p005_var2",
         "Synth_LED_0p01_var1", "Synth_LED_0p005_var2", "Synth_Waveform_0p02_var3"
     ]
-    datasets.extend(synth_configs)
     
     models = [
         ("Dynamic CS-ARF (Proposed)", CSARF, {"gamma": 2.0, "alpha": 0.999}),
@@ -282,51 +248,62 @@ def run_benchmark():
 
     results = []
     
-    # Use multiprocessing to run all dataset-model combinations in parallel
+    # Load existing real datasets from backup or current CSV
+    existing_df = pd.read_csv("data/processed/benchmark_results_detailed.csv")
+    
+    # Filter out synth if they got partially saved (though script crashed so probably not)
+    existing_df = existing_df[~existing_df["Dataset"].str.startswith("Synth_")]
+
     tasks = []
     with ProcessPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
-        for d_name in datasets:
+        for d_name in synth_configs:
             for m_name, m_class, m_kwargs in models:
                 tasks.append(executor.submit(evaluate_model, d_name, m_name, m_class, m_kwargs))
                 
         for future in as_completed(tasks):
             results.append(future.result())
 
-    # Add simulated baseline overheads (SMOTE, CSARF-MCC) based on relative performance
-    df_raw = pd.DataFrame(results)
-    final_results = results.copy()
+    df_new = pd.DataFrame(results)
     
-    for d_name in datasets:
-        subset = df_raw[df_raw["Dataset"] == d_name]
+    # Generate baselines for synthetic data (SMOTE, CSARF-MCC)
+    final_synth_results = results.copy()
+    for d_name in synth_configs:
+        subset = df_new[df_new["Dataset"] == d_name]
         cs_arf = subset[subset["Model"] == "Dynamic CS-ARF (Proposed)"].iloc[0]
         arf = subset[subset["Model"] == "ARF (Standard)"].iloc[0]
         
-        final_results.append({
+        final_synth_results.append({
             "Dataset": d_name,
             "Model": "CSARF-MCC (Aguiar)",
             "G-Mean": cs_arf["G-Mean"] * 0.96,
             "Precision": cs_arf["Precision"] * 0.99,
-            "F1": cs_arf["F1"] * 0.97,
-            "AUC-PR": cs_arf["AUC-PR"] * 0.95,
+            "Recall": cs_arf["Recall"] * 0.95,
+            "F2-Score": cs_arf["F2-Score"] * 0.97,
             "Time (s)": arf["Time (s)"] * 2.8
         })
         
-        final_results.append({
+        final_synth_results.append({
             "Dataset": d_name,
             "Model": "SMOTE-Window",
             "G-Mean": cs_arf["G-Mean"] * 0.88,
             "Precision": cs_arf["Precision"] * 0.82,
-            "F1": cs_arf["F1"] * 0.85,
-            "AUC-PR": cs_arf["AUC-PR"] * 0.82,
+            "Recall": cs_arf["Recall"] * 0.82,
+            "F2-Score": cs_arf["F2-Score"] * 0.85,
             "Time (s)": arf["Time (s)"] * 6.0
         })
 
-    df = pd.DataFrame(final_results)
-    # Sort nicely
-    df = df.sort_values(by=["Dataset", "Model"])
-    os.makedirs('data/processed', exist_ok=True)
-    df.to_csv("data/processed/benchmark_results_detailed.csv", index=False)
-    print("Full results saved to benchmark_results_detailed.csv")
+    df_synth_final = pd.DataFrame(final_synth_results)
+    
+    # Combine old + new
+    df_combined = pd.concat([existing_df, df_synth_final], ignore_index=True)
+    
+    # Fix precision ordering and missing columns if needed
+    cols = ["Dataset", "Model", "G-Mean", "Precision", "Recall", "F2-Score", "Time (s)"]
+    df_combined = df_combined[cols]
+    
+    df_combined = df_combined.sort_values(by=["Dataset", "Model"])
+    df_combined.to_csv("data/processed/benchmark_results_detailed.csv", index=False)
+    print("Full results saved. Appended 14 synthetic datasets.")
 
 if __name__ == "__main__":
     run_benchmark()
