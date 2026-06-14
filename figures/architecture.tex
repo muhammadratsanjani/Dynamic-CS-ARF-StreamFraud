@@ -1,0 +1,65 @@
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usetikzlibrary{shapes.geometric, arrows, positioning, fit, calc, shadows.blur}
+
+\begin{document}
+\begin{tikzpicture}[
+    >=stealth,
+    node distance=1.5cm and 2cm,
+    font=\sffamily\small,
+    box/.style={rectangle, draw=blue!60, fill=blue!5, thick, minimum width=3cm, minimum height=1cm, align=center, rounded corners=3pt, blur shadow={shadow blur steps=5}},
+    process/.style={rectangle, draw=green!60!black, fill=green!5, thick, minimum width=3cm, minimum height=1cm, align=center, rounded corners=3pt, blur shadow={shadow blur steps=5}},
+    decision/.style={diamond, aspect=2, draw=red!60, fill=red!5, thick, align=center, inner sep=2pt, blur shadow={shadow blur steps=5}},
+    arrow/.style={->, thick, draw=gray!80},
+    dashed_arrow/.style={->, thick, dashed, draw=gray!80},
+    group/.style={rectangle, draw=gray!50, fill=gray!2, dashed, rounded corners, inner sep=15pt}
+]
+
+% Nodes
+\node[box] (stream) {Data Stream \\ $(x_t, y_t)$};
+
+\node[decision, right=1.5cm of stream] (check_class) {Is Minority\\ (Fraud)?};
+
+\node[process, above right=0.5cm and 1.5cm of check_class] (maj_weight) {Majority Weight\\ $k \sim \text{Poisson}(1)$};
+\node[process, below right=0.5cm and 1.5cm of check_class] (min_weight) {Dynamic Penalty\\ $k \sim \text{Poisson}(\lambda_t)$};
+
+\node[box, right=2.5cm of maj_weight, yshift=-1.5cm] (bagging) {Asymmetric Online Bagging\\ Update Trees $k$ times};
+
+\node[process, right=2cm of bagging] (ensemble) {Ensemble of Base Learners\\ (Hoeffding Trees)};
+
+\node[decision, below=1cm of ensemble] (adwin) {ADWIN Detects\\ Drift ($D_t$)?};
+
+\node[box, left=2cm of adwin] (calc_lambda) {Update Penalty \\ $\lambda_t = IR_t \times (1 + \gamma D_t)$};
+
+\node[process, right=1.5cm of adwin] (replace) {Reset Tree \&\\ Train Background Tree};
+
+\node[box, right=2cm of ensemble] (aggregation) {Weighted Majority\\ Vote};
+
+\node[box, right=1.5cm of aggregation] (prediction) {Real-Time\\ Prediction ($\hat{y}_t$)};
+
+% Connections
+\draw[arrow] (stream) -- (check_class);
+\draw[arrow] (check_class.north) |- (maj_weight.west) node[pos=0.75, above, xshift=-0.5cm] {No};
+\draw[arrow] (check_class.south) |- (min_weight.west) node[pos=0.75, below, xshift=-0.5cm] {Yes};
+
+\draw[arrow] (maj_weight.east) -| (bagging.north);
+\draw[arrow] (min_weight.east) -| (bagging.south);
+
+\draw[arrow] (bagging) -- (ensemble);
+\draw[arrow] (ensemble) -- (aggregation);
+\draw[arrow] (aggregation) -- (prediction);
+
+\draw[arrow] (ensemble) -- (adwin);
+\draw[arrow] (adwin.east) -- node[above] {Yes} (replace.west);
+\draw[arrow] (replace.north) |- (ensemble.east);
+
+\draw[dashed_arrow] (adwin.west) -- node[above] {Update $D_t$} (calc_lambda.east);
+\draw[dashed_arrow] (calc_lambda.west) -| (min_weight.south);
+
+% Background Groups
+\node[group, fit=(maj_weight) (min_weight) (check_class) (bagging), label={[shift={(0,0)}]above:\textbf{Dynamic Cost-Sensitive Weighting}}] (group1) {};
+\node[group, fit=(ensemble) (adwin) (replace), label={[shift={(0,0)}]above:\textbf{Adaptive Drift Handling}}] (group2) {};
+
+\end{tikzpicture}
+\end{document}
