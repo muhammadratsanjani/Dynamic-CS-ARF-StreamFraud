@@ -37,7 +37,7 @@
 
 \node[box, left=2cm of adwin] (calc_lambda) {Update Penalty \\ $\lambda_t = IR_t \times (1 + \gamma D_t)$};
 
-\node[process, right=2cm of adwin] (replace) {Reset Tree \&\\ Train Background Tree};
+\node[process, right=2cm of adwin] (replace) {Replace with\\ Background Tree};
 
 % Connections
 \draw[arrow] (stream) -- (check_class);
@@ -53,7 +53,7 @@
 
 \draw[arrow] (ensemble) -- (adwin);
 \draw[arrow] (adwin.east) -- node[above] {Yes} (replace.west);
-\draw[arrow] (replace.north) |- ([yshift=10pt]ensemble.east) -| (ensemble.north);
+\draw[arrow] (replace.north west) -- (ensemble.south east);
 
 \draw[dashed_arrow] (adwin.west) -- node[above] {Update $D_t$} (calc_lambda.east);
 \draw[dashed_arrow] (calc_lambda.west) -| (min_weight.south);
