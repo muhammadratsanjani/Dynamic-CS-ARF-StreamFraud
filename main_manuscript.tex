@@ -389,6 +389,21 @@ Real-world fraud detection systems rarely receive true labels immediately; verif
 
 As shown in Figure~\ref{fig:delay_degradation}, Dynamic CS-ARF maintains a clear superiority over Standard ARF at zero or short verification latencies (e.g., $N \le 100$), corroborating its efficacy in near-real-time feedback environments. However, as verification latency increases to extreme levels ($N \ge 1000$), the performance of Dynamic CS-ARF degrades more steeply than the baseline. This vulnerability arises because the core mechanisms of Dynamic CS-ARF---namely the Exponential Moving Average of the Imbalance Ratio ($IR_t$) and the prequential ADWIN drift detector ($D_t$)---are highly sensitive to the temporal freshness of the ground truth. When labels are heavily delayed, the dynamic Poisson penalty ($\lambda_t$) fails to capture the true instantaneous state of the stream, leading to suboptimal oversampling weights. Consequently, while Dynamic CS-ARF excels in fast-verification scenarios, environments with extreme label latency remain an open challenge for dynamic cost-sensitive architectures.
 
+\subsection{Robustness to Explicit Concept Drift}
+\label{sec:explicit_drift}
+To explicitly validate the algorithm's resilience to sudden distributional shifts (a critical vulnerability in highly imbalanced streams), we simulated a 60,000-transaction sequence using the synthetic Agrawal generator, engineered with a severe 1\% minority class imbalance. We artificially injected two abrupt, severe concept drifts at exactly $t = 20,000$ and $t = 40,000$ by sharply altering the underlying classification function.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/drift_adaptation.pdf}
+    \caption{Rolling Recall over time demonstrating model recovery after abrupt concept drifts at $t=20,000$ and $t=40,000$.}
+    \label{fig:drift_adaptation}
+\end{figure}
+
+As depicted in Figure~\ref{fig:drift_adaptation}, both models maintain high initial recall before the first drift. However, when the concept abruptly shifts at $t=20,000$, the underlying topological rules for minority instances change entirely, causing the Rolling Recall of both models to plummet. Because Standard ARF naturally favors the 99\% majority class, it lacks the necessary exposure to the new, post-drift minority instances to rebuild its decision boundaries; as a result, its recall struggles to recover, remaining severely depressed below 40\%. 
+
+In stark contrast, Dynamic CS-ARF immediately triggers its ADWIN drift detector, temporarily spiking the dynamic $\lambda_t$ multiplier. This mechanism subjects the newly arriving post-drift minority instances to massive local oversampling (e.g., repeating each new minority instance hundreds of times). Consequently, the Hoeffding Trees are forced to rapidly discard the obsolete boundaries and memorize the new fraud topology, enabling Dynamic CS-ARF to aggressively rebuild its Recall back to over 80\% shortly after each abrupt concept drift.
+
 \subsection{Computational Efficiency and Real-Time Feasibility}
 \label{sec:throughput}
 A common criticism of ensemble-based oversampling methods is the increased computational overhead caused by repeatedly training base learners on minority instances. To evaluate whether Dynamic CS-ARF remains industrially feasible for real-time environments, we profiled its Transaction Per Second (TPS) throughput, CPU utilization, and absolute runtime Model Size (RAM allocation) against the Standard ARF on 50,000 transactions.
