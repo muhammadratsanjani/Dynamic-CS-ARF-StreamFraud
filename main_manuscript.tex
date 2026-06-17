@@ -12,6 +12,7 @@
 \usepackage{multirow}
 \usepackage{booktabs}
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{tikz}
 
 \geometry{margin=1in}
 
@@ -343,9 +344,55 @@ Furthermore, the empirical execution times reveal that Dynamic CS-ARF is computa
 \subsubsection{Statistical Significance (Friedman Test)}
 To statistically evaluate the empirical results of Dynamic CS-ARF, we conducted a non-parametric Friedman test \cite{demsar2006statistical} on the $F_2$-Score ranks across the full corpus of $N=20$ datasets and seven algorithms. The null hypothesis states that all algorithms perform equivalently. The test yielded an average rank of 2.600 for Dynamic CS-ARF, establishing it as the top-performing ensemble overall. 
 
-Crucially, the Friedman test statistic returned $\chi^2_F = 17.578$ ($df=6, p = 0.00738$). Because $p < 0.01$, we successfully reject the null hypothesis at the 1\% significance level. This indicates that there is a strongly significant difference in performance across the models. 
+Crucially, the Friedman test statistic returned $\chi^2_F = 17.578$ ($df=6, p = 0.00738$). Because $p < 0.01$, we successfully reject the null hypothesis at the 1\% significance level. This indicates that there is a strongly significant difference in performance across the models. To isolate these differences, we performed a post-hoc Nemenyi test with a computed Critical Difference (CD) of 2.0146. Dynamic CS-ARF significantly outperformed both HAT (rank diff 2.075 $>$ CD) and SMOTE-Window (rank diff 2.300 $>$ CD), while closely approaching formal significance against UOB (rank diff 1.95). These findings prove Dynamic CS-ARF's capability to robustly adapt to streaming fraud topologies while systematically outperforming traditional baseline mechanisms in a statistically significant manner.
 
-To isolate these differences, we performed a post-hoc Nemenyi test with a computed Critical Difference (CD) of 2.0146. Dynamic CS-ARF significantly outperformed both HAT (rank diff 2.075 $>$ CD) and SMOTE-Window (rank diff 2.300 $>$ CD), while closely approaching formal significance against UOB (rank diff 1.95). These findings prove Dynamic CS-ARF's capability to robustly adapt to streaming fraud topologies while systematically outperforming traditional baseline mechanisms in a statistically significant manner.
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=1.5]
+        % Axis
+        \draw[thick] (1,0) -- (7,0);
+        \foreach \x in {1,2,3,4,5,6,7} {
+            \draw (\x,0) -- (\x,0.15);
+            \node[above] at (\x,0.15) {\x};
+        }
+        
+        % CD line (top left)
+        \draw[thick] (1, 1.0) -- (1+2.0146, 1.0);
+        \node[above] at (1+1.0073, 1.0) {CD = 2.0146};
+        \draw (1, 0.9) -- (1, 1.1);
+        \draw (3.0146, 0.9) -- (3.0146, 1.1);
+
+        % Ranks
+        % Left side (Ranks <= 4)
+        \draw (2.600, 0) -- (2.600, -0.4) -- (2.2, -0.4);
+        \node[left] at (2.2, -0.4) {Dynamic CS-ARF (2.60)};
+        
+        \draw (3.200, 0) -- (3.200, -0.8) -- (2.2, -0.8);
+        \node[left] at (2.2, -0.8) {ARF (3.20)};
+        
+        \draw (3.800, 0) -- (3.800, -1.2) -- (2.2, -1.2);
+        \node[left] at (2.2, -1.2) {OOB (3.80)};
+
+        % Right side (Ranks > 4)
+        \draw (4.275, 0) -- (4.275, -0.4) -- (5.2, -0.4);
+        \node[right] at (5.2, -0.4) {CSARF-MCC (4.28)};
+        
+        \draw (4.550, 0) -- (4.550, -0.8) -- (5.2, -0.8);
+        \node[right] at (5.2, -0.8) {UOB (4.55)};
+        
+        \draw (4.675, 0) -- (4.675, -1.2) -- (5.2, -1.2);
+        \node[right] at (5.2, -1.2) {HAT (4.68)};
+        
+        \draw (4.900, 0) -- (4.900, -1.6) -- (5.2, -1.6);
+        \node[right] at (5.2, -1.6) {SMOTE-Window (4.90)};
+        
+        % Significance lines
+        \draw[ultra thick, black] (2.600, -1.9) -- (4.550, -1.9);
+        \draw[ultra thick, gray] (3.200, -2.1) -- (4.900, -2.1);
+    \end{tikzpicture}
+    \caption{Critical Difference (CD) diagram for the post-hoc Nemenyi test. Classifiers connected by the same horizontal line have no significant performance difference at $\alpha=0.05$.}
+    \label{fig:cd_diagram}
+\end{figure}
 
 \subsubsection{Ablation Study: Static vs Dynamic Penalty}
 To evaluate the efficacy of the dynamic cost-sensitive formulation, we conducted an ablation study comparing traditional Static CS-ARF implementations (with fixed penalties $\beta \in \{100, 300\}$) against the proposed Dynamic CS-ARF. To evaluate this on real-world industrial data, we ran the ablation over a randomized, stratified 50,000-row subset of the ULB Credit Card stream, preserving its extreme 0.172\% fraud ratio.
