@@ -337,7 +337,7 @@ Table \ref{tab:detailed_results} presents the detailed prequential performance a
 
 It is important to note that the Undersampling Online Bagging (UOB) model secured a marginally higher G-Mean on four out of the six datasets. However, UOB achieves this by systematically discarding majority class instances, which reduces its Precision. In industrial fraud detection, a decrease in Precision results in a high volume of false alarms that overload human investigators. Consequently, CS-ARF achieves a higher $F_2$-Score on four out of the six datasets because it successfully recovers minority class Recall without sacrificing the global majority context, maintaining a higher Precision than UOB.
 
-Furthermore, the empirical execution times reveal that CS-ARF is computationally heavier than the standard ARF due to its extensive Poisson updating for the minority class ($\beta=300$). However, CS-ARF justifies this computational cost by delivering competitive $F_2$-Score and Recall stability, proving its capability to detect rare fraud instances at a large scale without generating high false alarm rates.
+Furthermore, the empirical execution times reveal that Dynamic CS-ARF is computationally heavier than the standard ARF due to its extensive dynamic Poisson updating for the minority class (via $\lambda_t$). However, Dynamic CS-ARF justifies this computational cost by delivering competitive $F_2$-Score and Recall stability, proving its capability to detect rare fraud instances at a large scale without generating high false alarm rates.
 
 \input{figures/detailed_table.tex}
 
