@@ -63,8 +63,7 @@ To address these limitations, this paper proposes a novel framework: the Dynamic
 The main contributions of this paper are summarized as follows:
 \begin{itemize}
     \item We propose a single-pass streaming architecture, Dynamic CS-ARF, which solves both concept drift and high class imbalance simultaneously without relying on computationally expensive two-stage resampling.
-    \item We introduce a continuous mathematical formulation that dynamically modulates the Poisson bagging distribution $\lambda_t$ in response to real-time fluctuations in the imbalance ratio and drift detection signals.
-    \item We introduce an Implicit Online Oversampling mechanism based on asymmetric cost matrices integrated into the Poisson bagging distribution.
+    \item We introduce an Implicit Online Oversampling mechanism with a continuous mathematical formulation that dynamically modulates the Poisson bagging distribution $\lambda_t$ in response to real-time fluctuations in the imbalance ratio and drift detection signals.
     \item We present an extensive hyperparameter sensitivity analysis demonstrating the optimal cost boundary for maintaining geometric mean (G-Mean) stability.
     \item We validate our approach through comprehensive empirical benchmarking against six state-of-the-art baselines across six diverse data streams. Empirical results confirm that our method successfully recovers rare minority class instances that standard streaming ensembles ignore, trading structural computational time for consistent anomaly detection.
 \end{itemize}
