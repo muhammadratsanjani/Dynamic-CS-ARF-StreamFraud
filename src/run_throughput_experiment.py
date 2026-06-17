@@ -106,21 +106,20 @@ def profile_model(d_name, m_name, model_class, kwargs):
     exec_time = end_time - start_time
     
     cpu_usage = process.cpu_percent()
-    mem_after = process.memory_info().rss
     
-    peak_mem_mb = (mem_after - mem_before) / (1024 * 1024)
-    if peak_mem_mb < 0:
-        peak_mem_mb = process.memory_info().rss / (1024 * 1024) # Fallback to absolute
+    import pickle
+    model_size_bytes = len(pickle.dumps(model))
+    model_size_mb = model_size_bytes / (1024 * 1024)
         
     tps = n_transactions / exec_time if exec_time > 0 else 0
     
-    print(f"[{m_name}] TPS: {tps:.2f}, Mem: {peak_mem_mb:.2f} MB, CPU: {cpu_usage:.2f}%, Time: {exec_time:.2f}s")
+    print(f"[{m_name}] TPS: {tps:.2f}, Size: {model_size_mb:.2f} MB, CPU: {cpu_usage:.2f}%, Time: {exec_time:.2f}s")
     
     return {
         "Dataset": d_name,
         "Model": m_name,
         "Throughput (TPS)": round(tps, 2),
-        "Memory (MB)": round(peak_mem_mb, 2),
+        "Size (MB)": round(model_size_mb, 2),
         "CPU (%)": round(cpu_usage, 2),
         "Time (s)": round(exec_time, 2)
     }

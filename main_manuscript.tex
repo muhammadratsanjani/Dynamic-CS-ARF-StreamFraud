@@ -376,28 +376,28 @@ As shown in Figure~\ref{fig:delay_degradation}, Dynamic CS-ARF maintains a clear
 
 \subsection{Computational Efficiency and Real-Time Feasibility}
 \label{sec:throughput}
-A common criticism of ensemble-based oversampling methods is the increased computational overhead caused by repeatedly training base learners on minority instances. To evaluate whether Dynamic CS-ARF remains industrially feasible for real-time environments, we profiled its Transaction Per Second (TPS) throughput, CPU utilization, and Memory allocation against the Standard ARF on 50,000 transactions.
+A common criticism of ensemble-based oversampling methods is the increased computational overhead caused by repeatedly training base learners on minority instances. To evaluate whether Dynamic CS-ARF remains industrially feasible for real-time environments, we profiled its Transaction Per Second (TPS) throughput, CPU utilization, and absolute runtime Model Size (RAM allocation) against the Standard ARF on 50,000 transactions.
 
 \begin{table}[htbp]
     \centering
-    \caption{Computational profiling (Throughput, Memory Delta, and CPU utilization) on 50,000 continuous samples.}
+    \caption{Computational profiling (Throughput, Model Size, and CPU utilization) on 50,000 continuous samples.}
     \label{tab:throughput}
     \begin{tabular}{llccc}
         \toprule
-        \textbf{Dataset} & \textbf{Model} & \textbf{Throughput (TPS)} & \textbf{CPU (\%)} & \textbf{Memory Delta (MB)} \\
+        \textbf{Dataset} & \textbf{Model} & \textbf{Throughput (TPS)} & \textbf{CPU (\%)} & \textbf{Model Size (MB)} \\
         \midrule
-        \multirow{2}{*}{Agrawal} & ARF (Standard) & 684.92 & 99.6 & 10.90 \\
-        & Dynamic CS-ARF & 445.39 & 99.1 & 0.10 \\
+        \multirow{2}{*}{Agrawal} & ARF (Standard) & 684.92 & 99.6 & 0.87 \\
+        & Dynamic CS-ARF & 445.39 & 99.1 & 0.14 \\
         \midrule
-        \multirow{2}{*}{Hyperplane} & ARF (Standard) & 806.95 & 99.4 & 10.89 \\
-        & Dynamic CS-ARF & 502.40 & 99.3 & 0.06 \\
+        \multirow{2}{*}{Hyperplane} & ARF (Standard) & 806.95 & 99.4 & 1.51 \\
+        & Dynamic CS-ARF & 502.40 & 99.3 & 0.08 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-As shown in Table~\ref{tab:throughput}, the dynamic Poisson penalty undeniably imposes a computational cost, reducing the throughput from $\sim$685--806 TPS in Standard ARF to $\sim$445--502 TPS in Dynamic CS-ARF. Both models fully utilize a single CPU core ($\sim$99\%), while memory growth remains negligible due to the incremental nature of Hoeffding Trees. 
+As shown in Table~\ref{tab:throughput}, the dynamic Poisson penalty undeniably imposes a computational runtime cost, reducing the throughput from $\sim$685--806 TPS in Standard ARF to $\sim$445--502 TPS in Dynamic CS-ARF. Both models fully utilize a single CPU core ($\sim$99\%). However, a critical advantage of Dynamic CS-ARF emerges in its RAM footprint. While Standard ARF expands extensively across the majority class space (growing up to 1.51 MB), Dynamic CS-ARF produces a significantly more compact ensemble (under 0.15 MB). Because the oversampling heavily re-evaluates the same rare minority instances, the trees update their internal node statistics without triggering excessive structural splits, creating a highly memory-efficient topology.
 
-Despite this reduction, achieving $\sim$500 TPS on a single-threaded Python process indicates strong industrial feasibility. For context, major credit card networks like Visa process an average of 1,700 TPS globally. Because stream-based trees evaluate transactions independently, Dynamic CS-ARF can be straightforwardly parallelized across a modern 4- or 8-core CPU array to comfortably exceed global transaction velocities, making it highly viable for real-time industrial deployment.
+Despite the reduction in TPS, achieving $\sim$500 TPS on a single-threaded Python process indicates strong industrial feasibility. For context, major credit card networks like Visa process an average of 1,700 TPS globally. Because stream-based trees evaluate transactions independently, Dynamic CS-ARF can be straightforwardly parallelized across a modern 4- or 8-core CPU array to comfortably exceed global transaction velocities, making it highly viable for real-time industrial deployment.
 
 \subsection{Limitations}
 \label{sec:limitations}
