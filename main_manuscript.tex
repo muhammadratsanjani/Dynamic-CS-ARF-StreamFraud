@@ -131,7 +131,7 @@ Building upon the single Hoeffding Tree, Gomes et al. (2017) \cite{gomes2017adap
 \section{Methodology}
 \label{sec:methodology}
 
-This section details the proposed Dynamic Cost-Sensitive Adaptive Random Forest (Dynamic CS-ARF) architecture. We first describe the foundational mechanism of the standard Adaptive Random Forest and its concept drift detector. Subsequently, we formulate the mathematical basis of our proposed Implicit Online Oversampling technique to handle high class imbalance in a single-pass environment.
+This section details the proposed Dynamic Cost-Sensitive Adaptive Random Forest (Dynamic CS-ARF) architecture. We first describe the foundational mechanism of the standard Adaptive Random Forest and its concept drift detector. Subsequently, we formulate the mathematical basis of our proposed Dynamic Implicit Online Oversampling technique to handle high class imbalance in a single-pass environment.
 
 \subsection{Standard Adaptive Random Forest and Concept Drift}
 The Adaptive Random Forest (ARF) algorithm is an ensemble learning method specifically designed for continuous data streams. ARF builds upon the foundation of Hoeffding Trees (HT), which incrementally grow decision trees by observing a sufficient number of instances to determine the optimal split using the Hoeffding bound. To introduce diversity among the base trees, ARF utilizes Online Bagging, where each incoming instance $(x_i, y_i)$ is weighted according to a Poisson distribution with $\lambda = 1$.
@@ -309,7 +309,7 @@ To validate the efficacy of the proposed Dynamic Cost-Sensitive Adaptive Random 
 To systematically evaluate the adaptability and robustness of the proposed Dynamic CS-ARF under realistic continuous data streams, we utilized a comprehensive benchmark corpus of $N=20$ diverse datasets. Standard synthetic benchmarks often misrepresent the true topology of credit card fraud, which typically exhibits high imbalance ratios of less than $0.2\%$. To provide a comprehensive evaluation, we categorized our corpus into three distinct streaming paradigms:
 \begin{enumerate}
     \item \textbf{High Real-World Imbalance:} The \textit{ULB Credit Card} dataset \cite{dal2018credit} contains 284,807 European transactions with a very low fraud rate of just 0.172\%. The \textit{PaySim} dataset \cite{lopez2016paysim} simulates a large mobile money network spanning 6.3 million transactions, featuring a very low fraud rate of 0.13\%. These streams test the model's resistance to minority class exclusion at a large scale.
-    \item \textbf{Moderate Real-World Imbalance:} The \textit{IEEE-CIS Fraud Detection} \cite{ieee-fraud-detection} (590K transactions) and \textit{BankSim} \cite{lopez2014banksim} (594K transactions) datasets present moderate fraud rates of 3.5\% and 1.2\%, respectively, across differing topological spaces (e-commerce and banking). 
+    \item \textbf{Moderate Real-World Imbalance:} The \textit{IEEE-CIS Fraud Detection} \cite{ieee-fraud-detection} (590K transactions) and \textit{BankSim} \cite{lopez2014banksim} (594K transactions) datasets present moderate fraud rates of 3.5\% and 1.21\%, respectively, across differing topological spaces (e-commerce and banking). 
     \item \textbf{Synthetic Drift Benchmarks:} To explicitly evaluate the model's reaction to known, sudden, and gradual concept drifts while achieving sufficient statistical power, we augmented the real-world streams with 16 synthetic configurations across 6 generator families (\textit{SEA}, \textit{Agrawal}, \textit{Hyperplane}, \textit{RandomTree}, \textit{LED}, and \textit{Waveform}). These were calibrated to severe imbalance ratios ranging from 0.5\% to 2.0\% to emulate fraud topologies.
 \end{enumerate}
 
@@ -485,7 +485,7 @@ This paper addressed the dual challenge of concept drift and high class imbalanc
 
 By continuously modulating an asymmetric cost penalty within the Poisson bagging distribution based on real-time stream statistics, Dynamic CS-ARF successfully recovers rare fraud instances that static and standard models frequently miss. Most importantly, Dynamic CS-ARF outperforms competitive undersampling models (e.g., UOB) in the critical $F_2$-Score metric because it avoids extensive majority-class deletion, preserving global Precision and preventing the high false alarm rates that hinder undersampled networks. Dynamic CS-ARF empirically achieved superior $F_2$-Scores across multiple evaluated streams, delivering the robust adaptive performance essential for protecting real-world financial networks.
 
-While this dynamic oversampling delivers a decisive advantage in minority-class detection, it introduces a higher computational overhead compared to unmodified algorithms. Building on the demonstrated statistical significance ($p=0.007$, $\alpha=0.01$), future work will explore hardware-parallelized variations of Dynamic CS-ARF for ultra-low latency trading environments.
+While this dynamic oversampling delivers a decisive advantage in minority-class detection, it introduces a higher computational overhead compared to unmodified algorithms. Building on the demonstrated statistical significance ($p=0.0074$, $\alpha=0.01$), future work will explore hardware-parallelized variations of Dynamic CS-ARF for ultra-low latency trading environments.
 
 \bibliographystyle{plain}
 \bibliography{references}
