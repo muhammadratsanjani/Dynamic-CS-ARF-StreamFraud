@@ -78,7 +78,7 @@ Financial fraud detection has historically been tackled using static, batch-trai
 \subsection{Summary of Literature and Research Gap}
 Table \ref{tab:research_gap} summarizes the limitations of the state-of-the-art literature and highlights the specific research gaps filled by our proposed method. As demonstrated, although recent studies attempt to tackle concept drift using adaptive mechanisms \cite{bayramImprovingFraudDetection2020a}, they predominantly overlook high class imbalance. Conversely, methods attempting to solve both issues \cite{sunTwostageCostsensitiveLearning2020a, loezer2020csarf, aguiarCSARF2023, brzezinskiOnlineOversampling2021} either introduce architectural latency that violates strict streaming constraints or rely on computationally heavy internal heuristic modifications. 
 
-To bridge this crucial gap, our research proposes a structurally lightweight yet theoretically grounded Cost-Sensitive Adaptive Random Forest (CS-ARF). While Loezer et al. injected cost sensitivity at the ensemble voting level via MCC---a reactive mechanism that may lag during sudden drifts---our proposed CS-ARF injects cost sensitivity at the instance-level Poisson bagging weight, a proactive mechanism that operates independently of accumulated performance history and is structurally stable to abrupt concept drift in low-frequency fraud environments. By embedding a dynamically shifting asymmetric Poisson penalty while preserving standard Information Gain splits, Dynamic CS-ARF addresses both concept drift and class imbalance in a single-pass computation, prioritizing minority class Recall and G-Mean over raw throughput.
+To bridge this crucial gap, our research proposes a structurally lightweight yet theoretically grounded Dynamic Cost-Sensitive Adaptive Random Forest (Dynamic CS-ARF). While Loezer et al. injected cost sensitivity at the ensemble voting level via MCC---a reactive mechanism that may lag during sudden drifts---our proposed Dynamic CS-ARF injects cost sensitivity at the instance-level Poisson bagging weight, a proactive mechanism that operates independently of accumulated performance history and is structurally stable to abrupt concept drift in low-frequency fraud environments. By embedding a dynamically shifting asymmetric Poisson penalty while preserving standard Information Gain splits, Dynamic CS-ARF addresses both concept drift and class imbalance in a single-pass computation, prioritizing minority class Recall and G-Mean over raw throughput.
 
 \begin{table}[htbp]
     \centering
@@ -165,7 +165,7 @@ To resolve high class imbalance without relying on external two-stage resampling
 As illustrated in Figure \ref{fig:architecture}, the proposed framework operates continuously on a high-velocity data stream and consists of three primary interconnected components:
 
 \begin{enumerate}
-    \item \textbf{Asymmetric Online Bagging (Implicit Oversampling):} Unlike batch models that require buffering data to perform SMOTE or undersampling, CS-ARF processes each incoming transaction $(x_t, y_t)$ immediately in a single-pass environment. To combat the low frequency of fraudulent transactions, we inject an asymmetric cost penalty directly into the online bagging mechanism. If the transaction is legitimate (the majority class), it is assigned a weight $k$ drawn from a standard Poisson distribution ($\lambda = 1$). However, if the transaction is fraudulent (the minority class), it is assigned a weight drawn from a dynamically adjusted Poisson distribution ($\lambda = \lambda_t$). This acts as an \textit{Dynamic Implicit Online Oversampling} mechanism, forcing the base learners to repeatedly train on the minority instance without physically duplicating the data in memory.
+    \item \textbf{Asymmetric Online Bagging (Implicit Oversampling):} Unlike batch models that require buffering data to perform SMOTE or undersampling, CS-ARF processes each incoming transaction $(x_t, y_t)$ immediately in a single-pass environment. To combat the low frequency of fraudulent transactions, we inject an asymmetric cost penalty directly into the online bagging mechanism. If the transaction is legitimate (the majority class), it is assigned a weight $k$ drawn from a standard Poisson distribution ($\lambda = 1$). However, if the transaction is fraudulent (the minority class), it is assigned a weight drawn from a dynamically adjusted Poisson distribution ($\lambda = \lambda_t$). This acts as a \textit{Dynamic Implicit Online Oversampling} mechanism, forcing the base learners to repeatedly train on the minority instance without physically duplicating the data in memory.
     \item \textbf{Ensemble of Base Learners (Hoeffding Trees):} The weighted transaction is then passed to an ensemble of Hoeffding Trees. Because the fraudulent transactions receive a significantly larger $k$ weight based on real-time stream statistics, the Hoeffding Trees update their internal sufficient statistics $k$ times for that single fraud instance. This cost-sensitive penalty mechanism forces the heuristic split criteria (such as Information Gain) to identify the minority class, preventing the trees from converging into biased majority-class predictors.
     \item \textbf{Concept Drift Handling (ADWIN):} To maintain predictive stability in a dynamic environment where fraudsters frequently alter their attack patterns, each Hoeffding Tree is monitored by an Adaptive Windowing (ADWIN) detector. ADWIN tracks the prequential error rate of its respective tree. If a measured increase in the error rate is detected---indicating that a new fraud pattern has emerged and the old tree's knowledge is obsolete---the tree is immediately discarded and replaced by a fresh background tree. Finally, the predictions from all active trees are aggregated using a Weighted Majority Vote to produce the real-time classification.
 \end{enumerate} 
@@ -191,7 +191,7 @@ Where $\gamma$ is a scalar controlling the magnitude of the drift penalty.
     Count_{min, t} = \alpha \cdot Count_{min, t-1} + \mathbb{I}(y_t = 1)
 \end{equation}
 \begin{equation}
-    IR_t = \frac{Count_{maj, t}}{\max(1, Count_{min, t})}
+    IR_t = \frac{Count_{maj, t}}{\max(10^{-5}, Count_{min, t})}
 \end{equation}
 
 \textbf{2. Drift Confidence ($D_t$):} To aggressively adapt to new fraud strategies, we integrate a standalone ADWIN detector monitoring the prequential error of the ensemble. We extract a continuous drift signal $D_t \in [0, 1]$ from the binary ADWIN trigger. When drift is detected at time $t$, $D_t$ spikes to $1.0$. Otherwise, it decays exponentially using factor $\theta$:
@@ -234,8 +234,8 @@ Under our proposed \textit{Dynamic Implicit Online Oversampling}, the effective 
 \end{equation}
 Since $\sum w_i$ grows at a higher rate for the minority class, $\epsilon_{cost\_sensitive}$ decreases accordingly. This reduction allows the algorithm to satisfy the split criterion ($\Delta G > \epsilon_{cost\_sensitive}$) much earlier, successfully splitting on fraud patterns before concept drift can invalidate the accumulated statistics.
 
-\subsection{CS-ARF Pseudocode}
-The complete operational flow of the Cost-Sensitive Adaptive Random Forest is detailed in Algorithm \ref{algo:csarf}. The algorithm integrates asymmetric Poisson weighting for imbalance with ADWIN integration for concept drift, processing the entire stream in a strict single pass.
+\subsection{Dynamic CS-ARF Pseudocode}
+The complete operational flow of the Dynamic Cost-Sensitive Adaptive Random Forest is detailed in Algorithm \ref{algo:csarf}. The algorithm integrates asymmetric Poisson weighting for imbalance with ADWIN integration for concept drift, processing the entire stream in a strict single pass.
 
 \begin{algorithm}[htbp]
 \caption{Dynamic Cost-Sensitive Adaptive Random Forest}
@@ -250,7 +250,7 @@ $Count_{maj} \gets 0, Count_{min} \gets 0, D_t \gets 0$\;
     \tcp{1. Global Stream Statistics Update}
     $Count_{maj} \gets \alpha \cdot Count_{maj} + \mathbb{I}(y_t = 0)$\;
     $Count_{min} \gets \alpha \cdot Count_{min} + \mathbb{I}(y_t = 1)$\;
-    $IR_t \gets Count_{maj} / \max(1e^{-5}, Count_{min})$\;
+    $IR_t \gets Count_{maj} / \max(10^{-5}, Count_{min})$\;
     
     \tcp{2. Prequential Prediction}
     $\hat{y}_t \gets \text{MajorityVote}(\{HT_1(x_t), \dots, HT_M(x_t)\})$\;
@@ -315,7 +315,7 @@ To systematically evaluate the adaptability and robustness of the proposed Dynam
 
 \subsection{Baselines and Evaluation Protocol}
 
-The proposed CS-ARF was benchmarked against six state-of-the-art streaming algorithms:
+The proposed Dynamic CS-ARF was benchmarked against six state-of-the-art streaming algorithms:
 \begin{itemize}
     \item \textbf{ARF:} Standard Adaptive Random Forest \cite{gomes2017adaptive} (Baseline).
     \item \textbf{HAT:} Hoeffding Adaptive Tree (Single tree baseline) \cite{ESTEBAN2024112561}.
@@ -342,7 +342,7 @@ Furthermore, the empirical execution times reveal that Dynamic CS-ARF is computa
 \subsubsection{Statistical Significance (Friedman Test)}
 To statistically evaluate the empirical results of Dynamic CS-ARF, we conducted a non-parametric Friedman test \cite{demsar2006statistical} on the $F_2$-Score ranks across the full corpus of 20 datasets and seven algorithms. The null hypothesis states that all algorithms perform equivalently. The test yielded an average rank of 2.600 for Dynamic CS-ARF, establishing it as the top-performing ensemble overall. 
 
-Crucially, the Friedman test statistic returned $\chi^2_F = 17.578$ ($df=6, p = 0.00738$). Because $p < 0.01$, we successfully reject the null hypothesis at the 1\% significance level. This indicates that there is a strongly significant difference in performance across the models. To isolate these differences, we performed a post-hoc Nemenyi test with a computed Critical Difference (CD) of 2.0146. Dynamic CS-ARF significantly outperformed both HAT (rank diff 2.075 $>$ CD) and SMOTE-Window (rank diff 2.300 $>$ CD), while closely approaching formal significance against UOB (rank diff 1.95). These findings prove Dynamic CS-ARF's capability to robustly adapt to streaming fraud topologies while systematically outperforming traditional baseline mechanisms in a statistically significant manner.
+Crucially, the Friedman test statistic returned $\chi^2_F = 17.578$ ($df=6, p = 0.00738$). Because $p < 0.01$, we successfully reject the null hypothesis at the 1\% significance level. This indicates that there is a strongly significant difference in performance across the models. To isolate these differences, we performed a post-hoc Nemenyi test with a computed Critical Difference (CD) of 2.0146. Dynamic CS-ARF significantly outperformed both HAT (rank diff 2.075 $>$ CD) and SMOTE-Window (rank diff 2.300 $>$ CD). Although it closely approached the formal threshold against UOB (rank diff 1.95), the difference was not statistically significant at $\alpha=0.05$ (rank diff $<$ CD). These findings prove Dynamic CS-ARF's capability to robustly adapt to streaming fraud topologies while systematically outperforming traditional baseline mechanisms in a statistically significant manner.
 
 \begin{figure}[htbp]
     \centering
