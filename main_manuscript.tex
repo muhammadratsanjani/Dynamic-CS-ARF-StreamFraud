@@ -265,7 +265,7 @@ $Count_{maj} \gets 0, Count_{min} \gets 0, D_t \gets 0$\;
     \tcp{3. Cost-Sensitive Training Phase}
     \For{$m = 1$ \KwTo $M$}{
         \tcp{Asymmetric Poisson Bagging}
-        \eIf{$y_t == 1 \text{ (Fraud)}$}{
+        \eIf{$y_t = 1 \text{ (Fraud)}$}{
             $\lambda \gets \min(1000.0, IR_t \times (1 + \gamma \cdot D_t))$\;
         }{
             $\lambda \gets 1$\;
@@ -340,7 +340,9 @@ Furthermore, the empirical execution times reveal that Dynamic CS-ARF is computa
 \input{figures/detailed_table.tex}
 
 \subsubsection{Statistical Significance (Friedman Test)}
-To statistically evaluate the empirical results of Dynamic CS-ARF, we conducted a non-parametric Friedman test \cite{demsar2006statistical} on the $F_2$-Score ranks across the full corpus of 20 datasets and seven algorithms. The null hypothesis states that all algorithms perform equivalently. The test yielded an average rank of 2.600 for Dynamic CS-ARF, establishing it as the top-performing ensemble overall. Crucially, the Friedman test statistic returned $\chi^2_F = 17.578$ ($df=6, p = 0.00738$). Because $p < 0.01$, we successfully reject the null hypothesis at the 1\% significance level. This indicates that there is a strongly significant difference in performance across the models. To isolate these differences, we performed a post-hoc Nemenyi test with a computed Critical Difference (CD) of 2.0146. Dynamic CS-ARF significantly outperformed both HAT (rank diff 2.075 $>$ CD) and SMOTE-Window (rank diff 2.300 $>$ CD). While Dynamic CS-ARF did not achieve formal significance over UOB (rank diff 1.95 $<$ CD), it consistently outperformed UOB in the critical $F_2$-Score metric due to superior Precision preservation, as detailed in \S4.4. These findings prove Dynamic CS-ARF's capability to robustly adapt to streaming fraud topologies while systematically outperforming traditional baseline mechanisms.
+To statistically evaluate the empirical results of Dynamic CS-ARF, we conducted a non-parametric Friedman test \cite{demsar2006statistical} on the $F_2$-Score ranks across the full corpus of 20 datasets and seven algorithms. The null hypothesis states that all algorithms perform equivalently. The test yielded an average rank of 2.600 for Dynamic CS-ARF, establishing it as the top-performing ensemble overall. 
+
+Crucially, the Friedman test statistic returned $\chi^2_F = 17.578$ ($df=6, p = 0.00738$). Because $p < 0.01$, we successfully reject the null hypothesis at the 1\% significance level. This indicates that there is a strongly significant difference in performance across the models. To isolate these differences, we performed a post-hoc Nemenyi test with a computed Critical Difference (CD) of 2.0146. Dynamic CS-ARF significantly outperformed both HAT (rank diff 2.075 $>$ CD) and SMOTE-Window (rank diff 2.300 $>$ CD). While Dynamic CS-ARF did not achieve formal significance over UOB (rank diff 1.95 $<$ CD), it consistently outperformed UOB in the critical $F_2$-Score metric due to superior Precision preservation, as detailed in \S4.4. These findings prove Dynamic CS-ARF's capability to robustly adapt to streaming fraud topologies while systematically outperforming traditional baseline mechanisms.
 
 \begin{figure}[htbp]
     \centering
@@ -479,7 +481,7 @@ While the proposed Dynamic CS-ARF demonstrates significant improvements in imbal
 % -------------------------------------------------------------------
 \section{Conclusion}
 \label{sec:conclusion}
-This paper addressed the dual challenge of concept drift and high class imbalance in real-time financial fraud detection streams. We proposed the Dynamic Cost-Sensitive Adaptive Random Forest (Dynamic CS-ARF), which mitigates minority class exclusion via a dynamic \textit{Implicit Online Oversampling} mechanism. Through prequential benchmarking against six state-of-the-art baselines across 20 diverse industrial and synthetic benchmark datasets, we demonstrated that standard adaptive algorithms suffer performance degradation---frequently yielding very low Recall and $F_2$-Scores under high class imbalance conditions (fraud rates ranging from 0.13\% to 3.5\%).
+This paper addressed the dual challenge of concept drift and high class imbalance in real-time financial fraud detection streams. We proposed the Dynamic Cost-Sensitive Adaptive Random Forest (Dynamic CS-ARF), which mitigates minority class exclusion via a \textit{Dynamic Implicit Online Oversampling} mechanism. Through prequential benchmarking against six state-of-the-art baselines across 20 diverse industrial and synthetic benchmark datasets, we demonstrated that standard adaptive algorithms suffer performance degradation---frequently yielding very low Recall and $F_2$-Scores under high class imbalance conditions (fraud rates ranging from 0.13\% to 3.5\%).
 
 By continuously modulating an asymmetric cost penalty within the Poisson bagging distribution based on real-time stream statistics, Dynamic CS-ARF successfully recovers rare fraud instances that static and standard models frequently miss. Most importantly, Dynamic CS-ARF outperforms competitive undersampling models (e.g., UOB) in the critical $F_2$-Score metric because it avoids extensive majority-class deletion, preserving global Precision and preventing the high false alarm rates that hinder undersampled networks. Dynamic CS-ARF empirically achieved superior $F_2$-Scores across multiple evaluated streams, delivering the robust adaptive performance essential for protecting real-world financial networks.
 
