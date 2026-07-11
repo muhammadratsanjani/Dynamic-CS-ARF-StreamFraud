@@ -14,7 +14,9 @@ def format_bold(val, is_max, is_time=False):
 def generate_table():
     df = pd.read_csv("data/processed/benchmark_results_detailed.csv")
     
-    datasets = df["Dataset"].unique()
+    # Filter only 6 representative streams for the main manuscript table to avoid layout breakage
+    primary_datasets = ["Agrawal", "BankSim", "IEEE-CIS", "PaySim", "SEA", "ULB"]
+    datasets = [d for d in df["Dataset"].unique() if d in primary_datasets]
     
     lines = []
     lines.append("\\begin{table*}[htbp]")

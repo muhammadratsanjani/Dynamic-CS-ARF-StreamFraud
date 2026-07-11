@@ -1,5 +1,5 @@
-Dataset,Model,Throughput (TPS),Memory (MB),CPU (%),Time (s)
-Agrawal,ARF (Standard),684.92,10.9,99.6,73.0
-Agrawal,Dynamic CS-ARF (Proposed),445.39,0.1,99.1,112.26
-Hyperplane,ARF (Standard),806.95,10.89,99.4,61.96
-Hyperplane,Dynamic CS-ARF (Proposed),502.4,0.06,99.3,99.52
+Dataset,Model,Throughput (TPS),Size (MB),CPU (%),Time (s)
+Agrawal,ARF (Standard),667.64,0.87,99.1,74.89
+Agrawal,Dynamic CS-ARF (Proposed),411.58,0.14,99.4,121.48
+Hyperplane,ARF (Standard),708.14,1.51,99.1,70.61
+Hyperplane,Dynamic CS-ARF (Proposed),425.39,0.08,99.2,117.54

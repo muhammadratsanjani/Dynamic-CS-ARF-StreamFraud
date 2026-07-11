@@ -51,45 +51,71 @@ class CSARF:
     def predict_one(self, x):
         return self.model.predict_one(x)
         
-class ImbalancedStream:
-    def __init__(self, generator, minority_class=1, minority_prob=0.01, max_samples=10000):
-        self.generator = generator
+def thin_minority(generator, minority_class=1, minority_prob=0.01, rng=None):
+    """Yield from `generator` keeping all majority instances but only a
+    `minority_prob` fraction of minority instances, to induce severe
+    class imbalance while preserving the generator's natural concept."""
+    rng = rng or random
+    for x, y in generator:
+        if y == minority_class:
+            if rng.random() < minority_prob:
+                yield x, y
+        else:
+            yield x, y
+
+class ImbalancedDriftStream:
+    """Switches between three thinned Agrawal concepts at exact OUTPUT
+    transaction indices (t=20000 and t=40000), so the drift markers plotted
+    on the x-axis line up with when the concept actually changes.
+
+    NOTE: a previous version fed `position=20000/40000` to river's
+    ConceptDriftStream, but that position is measured in RAW (pre-thinning)
+    generator draws, not in the thinned OUTPUT stream that gets plotted.
+    With ~1% minority thinning, the raw and output indices diverge by a
+    factor of ~1.6-2x, so the drift was actually landing at output index
+    ~12,400 and ~21,800 while the figure labeled it at 20,000 and 40,000.
+    """
+    def __init__(self, switch_points=(20000, 40000), minority_class=1,
+                 minority_prob=0.01, max_samples=60000, seed=42):
+        self.switch_points = switch_points
         self.minority_class = minority_class
         self.minority_prob = minority_prob
         self.max_samples = max_samples
-        
+        self.seed = seed
+
     def __iter__(self):
+        rng = random.Random(self.seed)
+        concepts = [
+            synth.Agrawal(classification_function=1, seed=self.seed),
+            synth.Agrawal(classification_function=2, seed=self.seed),
+            synth.Agrawal(classification_function=3, seed=self.seed),
+        ]
+        boundaries = list(self.switch_points) + [self.max_samples]
         count = 0
-        gen_iter = iter(self.generator)
-        while count < self.max_samples:
-            try:
-                x, y = next(gen_iter)
-                if y == self.minority_class:
-                    if random.random() < self.minority_prob:
-                        count += 1
-                        yield x, y
-                else:
-                    count += 1
-                    yield x, y
-            except StopIteration:
+        for concept, upper in zip(concepts, boundaries):
+            for x, y in thin_minority(concept, self.minority_class, self.minority_prob, rng):
+                if count >= upper:
+                    break
+                count += 1
+                yield x, y
+            if count >= self.max_samples:
                 break
 
 def generate_drift_stream():
-    # Base stream configurations (Agrawal is good because drift is very clear)
-    stream1 = synth.Agrawal(classification_function=1, seed=42)
-    stream2 = synth.Agrawal(classification_function=2, seed=42)
-    stream3 = synth.Agrawal(classification_function=3, seed=42)
-
-    # Induce drift at 20k and 40k
-    drift1 = synth.ConceptDriftStream(stream=stream1, drift_stream=stream2, position=20000, width=500, seed=42)
-    drift2 = synth.ConceptDriftStream(stream=drift1, drift_stream=stream3, position=40000, width=500, seed=42)
-    
-    # Wrap in ImbalancedStream to make minority class 1% of the stream, total 60k
-    return ImbalancedStream(drift2, minority_class=1, minority_prob=0.01, max_samples=60000)
+    # Base stream configurations (Agrawal is good because drift is very clear).
+    # Concept switches at t=20,000 and t=40,000 are aligned to the OUTPUT
+    # (post-thinning) transaction index, matching the plotted x-axis.
+    return ImbalancedDriftStream(switch_points=(20000, 40000), minority_class=1,
+                                  minority_prob=0.01, max_samples=60000, seed=42)
 
 def track_model_performance(model_name, model_obj, stream_gen):
     print(f"Tracking {model_name}...")
-    rolling_recall = metrics.Rolling(metrics.Recall(), window_size=1000)
+    # window_size=1000 with a 1% minority rate yields ~10 positive instances
+    # per window on average, which is too sparse for a stable Recall estimate
+    # (Recall is undefined/0 whenever a window happens to contain 0 or few
+    # fraud cases). A window of 3000 (~30 expected positives) is used instead
+    # to reduce this small-sample noise while still tracking local recovery.
+    rolling_recall = metrics.Rolling(metrics.Recall(), window_size=3000)
     
     t_list = []
     recall_list = []
@@ -141,17 +167,34 @@ def main():
     
     plt.title('Rolling Recall vs Time (Agrawal Stream with 1% Imbalance)')
     plt.xlabel('Transactions Processed')
-    plt.ylabel('Rolling Recall (Window=1000)')
+    plt.ylabel('Rolling Recall (Window=3000)')
     plt.ylim([0.0, 1.05])
     plt.xlim([0, 60000])
-    plt.legend(loc='lower right')
+    plt.legend(loc='upper right')
     plt.grid(True, alpha=0.4)
-    
+
     plt.tight_layout()
     os.makedirs('figures', exist_ok=True)
     out_path = 'figures/drift_adaptation.pdf'
     plt.savefig(out_path, dpi=300)
     print(f"\nPlot saved to {out_path}")
+
+    # Export the raw series and summary stats used in the manuscript narrative.
+    os.makedirs('data/processed', exist_ok=True)
+    pd.DataFrame({
+        't_arf': pd.Series(t_arf), 'recall_arf': pd.Series(recall_arf),
+        't_csarf': pd.Series(t_csarf), 'recall_csarf': pd.Series(recall_csarf),
+    }).to_csv('data/processed/drift_rolling_recall.csv', index=False)
+
+    def segment_max(t_list, r_list, lo, hi):
+        vals = [r for t, r in zip(t_list, r_list) if lo <= t <= hi]
+        return max(vals) if vals else float('nan')
+
+    print("\n=== Segment-wise peak Rolling Recall ===")
+    for lo, hi, name in [(0, 20000, 'pre-drift1'), (20000, 40000, 'between drift1-drift2'), (40000, 60000, 'post-drift2')]:
+        print(f"{name:25s} ARF peak={segment_max(t_arf, recall_arf, lo, hi):.4f}  Dynamic peak={segment_max(t_csarf, recall_csarf, lo, hi):.4f}")
+    print(f"{'overall':25s} ARF peak={max(recall_arf):.4f}  Dynamic peak={max(recall_csarf):.4f}")
+    print(f"{'overall':25s} ARF mean={sum(recall_arf)/len(recall_arf):.4f}  Dynamic mean={sum(recall_csarf)/len(recall_csarf):.4f}")
 
 if __name__ == "__main__":
     main()
