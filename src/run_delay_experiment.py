@@ -10,7 +10,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import custom wrappers from run_benchmark
-from run_benchmark import CSARF, stream_csv
+from run_benchmark import CSARFv2, stream_csv
 
 def run_delayed_evaluation(model_class, kwargs, filepath, target_col, delay, max_rows=50000):
     model = model_class(**kwargs)
@@ -78,7 +78,7 @@ def main():
         # Dynamic CS-ARF
         print("Evaluating Dynamic CS-ARF...")
         csarf_gmean, csarf_recall = run_delayed_evaluation(
-            CSARF, {"gamma": 2.0, "alpha": 0.999}, 
+            CSARFv2, {"gamma": 2.0, "alpha": 0.999, "lambda_cap": 100.0, "precision_threshold": 0.3},
             filepath, target_col, d, max_rows
         )
         

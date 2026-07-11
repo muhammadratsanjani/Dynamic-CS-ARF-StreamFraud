@@ -4,6 +4,7 @@ import time
 import random
 import os
 import csv
+from collections import deque
 from sklearn.metrics import average_precision_score
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -93,6 +94,80 @@ class CSARF:
     def predict_proba_one(self, x):
         return self.model.predict_proba_one(x)
 
+# Dynamic CS-ARF v2: combines the original dynamic lambda_t formula (IR_t,
+# D_t, gamma) with three refinements motivated by diagnosing why the v1
+# mechanism lost to a real windowed-SMOTE baseline: (1) instead of repeating
+# the SAME minority instance k times (which memorizes exact points and hurts
+# Precision, especially on continuous-feature streams like ULB), it trains
+# once on the real instance and generates (k-1) SMOTE-style interpolated
+# synthetic variants from a bounded minority window; (2) lambda_t is capped
+# far more conservatively (100 instead of 1000); (3) a rolling-Precision
+# feedback term further damps lambda_t when Precision falls below a
+# threshold, so the effective oversampling intensity self-adjusts per
+# dataset instead of relying on one fixed global magnitude.
+class CSARFv2:
+    def __init__(self, gamma=2.0, alpha=0.999, theta=0.99, lambda_cap=100.0,
+                 window_size=200, precision_window=200, precision_threshold=0.3,
+                 min_damping=0.1, seed=42):
+        self.gamma, self.alpha, self.theta, self.lambda_cap = gamma, alpha, theta, lambda_cap
+        self.precision_threshold = precision_threshold
+        self.min_damping = min_damping
+        self.model = AdaptiveRandomForestClassifier(n_models=10, seed=seed)
+        self.count_maj = 0.0
+        self.count_min = 0.0
+        self.adwin = drift.ADWIN()
+        self.d_t = 0.0
+        self.rng = np.random.RandomState(seed)
+        self.py_rng = random.Random(seed)
+        self.window = deque(maxlen=window_size)
+        self.roll_prec = metrics.Rolling(metrics.Precision(), window_size=precision_window)
+
+    def _interpolate(self, x, neighbor):
+        synth_x = {}
+        alpha = self.py_rng.random()
+        for key, val in x.items():
+            n_val = neighbor.get(key)
+            if isinstance(val, (int, float)) and isinstance(n_val, (int, float)):
+                synth_x[key] = val + alpha * (n_val - val)
+            else:
+                synth_x[key] = val
+        return synth_x
+
+    def learn_one(self, x, y):
+        self.count_maj = self.alpha * self.count_maj + (1 if y == 0 else 0)
+        self.count_min = self.alpha * self.count_min + (1 if y == 1 else 0)
+        ir_t = self.count_maj / max(1e-5, self.count_min)
+
+        y_pred = self.model.predict_one(x)
+        if y_pred is not None:
+            self.roll_prec.update(y, y_pred)
+        self.adwin.update(0.0 if y_pred == y else 1.0)
+        self.d_t = 1.0 if self.adwin.change_detected else self.theta * self.d_t
+
+        p = self.roll_prec.get()
+        damping = max(self.min_damping, p / self.precision_threshold) if 0 < p < self.precision_threshold else 1.0
+
+        if y == 1:
+            lam = min(self.lambda_cap, ir_t * (1.0 + self.gamma * self.d_t)) * damping
+            k = self.rng.poisson(max(1.0, lam))
+            self.model.learn_one(x, y)
+            if len(self.window) >= 1:
+                for _ in range(max(0, k - 1)):
+                    neighbor = self.py_rng.choice(self.window)
+                    self.model.learn_one(self._interpolate(x, neighbor), 1)
+            self.window.append(x)
+        else:
+            k = self.rng.poisson(1.0)
+            for _ in range(k):
+                self.model.learn_one(x, y)
+        return self
+
+    def predict_one(self, x):
+        return self.model.predict_one(x)
+
+    def predict_proba_one(self, x):
+        return self.model.predict_proba_one(x)
+
 # OOB Wrapper
 class OOB:
     def __init__(self):
@@ -145,6 +220,95 @@ class UOB:
     def predict_proba_one(self, x):
         return self.model.predict_proba_one(x)
 
+# Cost-Sensitive ARF with MCC-weighted voting (Loezer et al. 2020; Aguiar et al.
+# 2023). Reuses river's own AdaptiveRandomForestClassifier for the online
+# bagging (Poisson lambda=1) and ADWIN-based background-tree replacement
+# machinery (unmodified, identical to standard ARF), and only replaces the
+# final aggregation step: each tree's vote is weighted by its own running
+# prequential Matthews Correlation Coefficient instead of a plain majority
+# vote, matching the internal-voting-heuristic modification described for
+# CSARF-MCC in the related work.
+class CSARFMCC:
+    def __init__(self, n_models=10, seed=42):
+        self.model = AdaptiveRandomForestClassifier(n_models=n_models, seed=seed)
+        self.mcc = [metrics.MCC() for _ in range(n_models)]
+
+    def _weighted_votes(self, x):
+        votes, total_w = {}, 0.0
+        for member, mcc in zip(self.model.models, self.mcc):
+            pred = member.predict_one(x)
+            if pred is None:
+                continue
+            w = max(mcc.get(), 0.05)
+            votes[pred] = votes.get(pred, 0.0) + w
+            total_w += w
+        return votes, total_w
+
+    def predict_one(self, x):
+        votes, _ = self._weighted_votes(x)
+        if not votes:
+            return None
+        return max(votes, key=votes.get)
+
+    def predict_proba_one(self, x):
+        votes, total_w = self._weighted_votes(x)
+        if total_w == 0:
+            return {0: 1.0, 1: 0.0}
+        proba = {0: 0.0, 1: 0.0}
+        proba.update({k: v / total_w for k, v in votes.items()})
+        return proba
+
+    def learn_one(self, x, y):
+        for member, mcc in zip(self.model.models, self.mcc):
+            pred = member.predict_one(x)
+            if pred is not None:
+                mcc.update(y, pred)
+        self.model.learn_one(x, y)
+        return self
+
+# Windowed SMOTE for streams (C-SMOTE/SMOTE-OB style, Bernardo et al.
+# 2020/2021): maintains a bounded sliding window of recent minority-class
+# instances. Each incoming minority instance is combined with a randomly
+# selected prior instance in the window via SMOTE-style linear interpolation
+# to generate k_synthetic synthetic minority instances, trained alongside
+# the real one; majority instances are trained normally (weight=1). Unlike
+# Dynamic CS-ARF, the oversampling magnitude here is a fixed percentage
+# (not adapted to the real-time imbalance ratio), consistent with classical
+# SMOTE formulations in the literature.
+class SMOTEWindow:
+    def __init__(self, n_models=10, window_size=200, k_synthetic=5, seed=42):
+        self.model = AdaptiveRandomForestClassifier(n_models=n_models, seed=seed)
+        self.window = deque(maxlen=window_size)
+        self.k_synthetic = k_synthetic
+        self.rng = random.Random(seed)
+
+    def predict_one(self, x):
+        return self.model.predict_one(x)
+
+    def predict_proba_one(self, x):
+        return self.model.predict_proba_one(x)
+
+    def _interpolate(self, x, neighbor):
+        synth_x = {}
+        alpha = self.rng.random()
+        for key, val in x.items():
+            n_val = neighbor.get(key)
+            if isinstance(val, (int, float)) and isinstance(n_val, (int, float)):
+                synth_x[key] = val + alpha * (n_val - val)
+            else:
+                synth_x[key] = val
+        return synth_x
+
+    def learn_one(self, x, y):
+        if y == 1:
+            if len(self.window) >= 1:
+                for _ in range(self.k_synthetic):
+                    neighbor = self.rng.choice(self.window)
+                    self.model.learn_one(self._interpolate(x, neighbor), 1)
+            self.window.append(x)
+        self.model.learn_one(x, y)
+        return self
+
 def stream_csv(filepath, target_col, max_rows=1000000):
     with open(filepath, 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
@@ -193,7 +357,7 @@ def get_generator(d_name):
         elif base == "Hyperplane":
             gen = synth.Hyperplane(seed=seed, mag_change=0.001 * seed, n_drift_features=2)
         elif base == "RandomTree":
-            gen = synth.RandomTree(seed=seed)
+            gen = synth.RandomTree(seed_tree=seed, seed_sample=seed)
         elif base == "LED":
             gen = synth.LED(seed=seed, noise_percentage=0.1)
         elif base == "Waveform":
@@ -273,55 +437,28 @@ def run_benchmark():
     datasets.extend(synth_configs)
     
     models = [
-        ("Dynamic CS-ARF (Proposed)", CSARF, {"gamma": 2.0, "alpha": 0.999}),
+        ("Dynamic CS-ARF (Proposed)", CSARFv2, {"gamma": 2.0, "alpha": 0.999, "lambda_cap": 100.0, "precision_threshold": 0.3}),
         ("ARF (Standard)", AdaptiveRandomForestClassifier, {"n_models": 10, "seed": 42}),
         ("HAT", HoeffdingAdaptiveTreeClassifier, {"seed": 42}),
         ("OOB", OOB, {}),
-        ("UOB", UOB, {})
+        ("UOB", UOB, {}),
+        ("CSARF-MCC (Aguiar)", CSARFMCC, {"n_models": 10, "seed": 42}),
+        ("SMOTE-Window", SMOTEWindow, {"n_models": 10, "seed": 42}),
     ]
 
     results = []
-    
+
     # Use multiprocessing to run all dataset-model combinations in parallel
     tasks = []
     with ProcessPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
         for d_name in datasets:
             for m_name, m_class, m_kwargs in models:
                 tasks.append(executor.submit(evaluate_model, d_name, m_name, m_class, m_kwargs))
-                
+
         for future in as_completed(tasks):
             results.append(future.result())
 
-    # Add simulated baseline overheads (SMOTE, CSARF-MCC) based on relative performance
-    df_raw = pd.DataFrame(results)
-    final_results = results.copy()
-    
-    for d_name in datasets:
-        subset = df_raw[df_raw["Dataset"] == d_name]
-        cs_arf = subset[subset["Model"] == "Dynamic CS-ARF (Proposed)"].iloc[0]
-        arf = subset[subset["Model"] == "ARF (Standard)"].iloc[0]
-        
-        final_results.append({
-            "Dataset": d_name,
-            "Model": "CSARF-MCC (Aguiar)",
-            "G-Mean": cs_arf["G-Mean"] * 0.96,
-            "Precision": cs_arf["Precision"] * 0.99,
-            "F1": cs_arf["F1"] * 0.97,
-            "AUC-PR": cs_arf["AUC-PR"] * 0.95,
-            "Time (s)": arf["Time (s)"] * 2.8
-        })
-        
-        final_results.append({
-            "Dataset": d_name,
-            "Model": "SMOTE-Window",
-            "G-Mean": cs_arf["G-Mean"] * 0.88,
-            "Precision": cs_arf["Precision"] * 0.82,
-            "F1": cs_arf["F1"] * 0.85,
-            "AUC-PR": cs_arf["AUC-PR"] * 0.82,
-            "Time (s)": arf["Time (s)"] * 6.0
-        })
-
-    df = pd.DataFrame(final_results)
+    df = pd.DataFrame(results)
     # Sort nicely
     df = df.sort_values(by=["Dataset", "Model"])
     os.makedirs('data/processed', exist_ok=True)

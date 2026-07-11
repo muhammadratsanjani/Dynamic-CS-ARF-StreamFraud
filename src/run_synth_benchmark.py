@@ -4,6 +4,7 @@ import time
 import random
 import os
 import csv
+from collections import deque
 from sklearn.metrics import average_precision_score
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -134,9 +135,85 @@ class UOB:
 
     def predict_one(self, x):
         return self.model.predict_one(x)
-        
+
     def predict_proba_one(self, x):
         return self.model.predict_proba_one(x)
+
+# Cost-Sensitive ARF with MCC-weighted voting (Loezer et al. 2020; Aguiar et al.
+# 2023) -- see src/run_benchmark.py for full documentation of the design.
+class CSARFMCC:
+    def __init__(self, n_models=10, seed=42):
+        self.model = AdaptiveRandomForestClassifier(n_models=n_models, seed=seed)
+        self.mcc = [metrics.MCC() for _ in range(n_models)]
+
+    def _weighted_votes(self, x):
+        votes, total_w = {}, 0.0
+        for member, mcc in zip(self.model.models, self.mcc):
+            pred = member.predict_one(x)
+            if pred is None:
+                continue
+            w = max(mcc.get(), 0.05)
+            votes[pred] = votes.get(pred, 0.0) + w
+            total_w += w
+        return votes, total_w
+
+    def predict_one(self, x):
+        votes, _ = self._weighted_votes(x)
+        if not votes:
+            return None
+        return max(votes, key=votes.get)
+
+    def predict_proba_one(self, x):
+        votes, total_w = self._weighted_votes(x)
+        if total_w == 0:
+            return {0: 1.0, 1: 0.0}
+        proba = {0: 0.0, 1: 0.0}
+        proba.update({k: v / total_w for k, v in votes.items()})
+        return proba
+
+    def learn_one(self, x, y):
+        for member, mcc in zip(self.model.models, self.mcc):
+            pred = member.predict_one(x)
+            if pred is not None:
+                mcc.update(y, pred)
+        self.model.learn_one(x, y)
+        return self
+
+# Windowed SMOTE for streams (C-SMOTE/SMOTE-OB style) -- see
+# src/run_benchmark.py for full documentation of the design.
+class SMOTEWindow:
+    def __init__(self, n_models=10, window_size=200, k_synthetic=5, seed=42):
+        self.model = AdaptiveRandomForestClassifier(n_models=n_models, seed=seed)
+        self.window = deque(maxlen=window_size)
+        self.k_synthetic = k_synthetic
+        self.rng = random.Random(seed)
+
+    def predict_one(self, x):
+        return self.model.predict_one(x)
+
+    def predict_proba_one(self, x):
+        return self.model.predict_proba_one(x)
+
+    def _interpolate(self, x, neighbor):
+        synth_x = {}
+        alpha = self.rng.random()
+        for key, val in x.items():
+            n_val = neighbor.get(key)
+            if isinstance(val, (int, float)) and isinstance(n_val, (int, float)):
+                synth_x[key] = val + alpha * (n_val - val)
+            else:
+                synth_x[key] = val
+        return synth_x
+
+    def learn_one(self, x, y):
+        if y == 1:
+            if len(self.window) >= 1:
+                for _ in range(self.k_synthetic):
+                    neighbor = self.rng.choice(self.window)
+                    self.model.learn_one(self._interpolate(x, neighbor), 1)
+            self.window.append(x)
+        self.model.learn_one(x, y)
+        return self
 
 def get_generator(d_name):
     if d_name.startswith("Synth_"):
@@ -243,14 +320,16 @@ def run_benchmark():
         ("ARF (Standard)", AdaptiveRandomForestClassifier, {"n_models": 10, "seed": 42}),
         ("HAT", HoeffdingAdaptiveTreeClassifier, {"seed": 42}),
         ("OOB", OOB, {}),
-        ("UOB", UOB, {})
+        ("UOB", UOB, {}),
+        ("CSARF-MCC (Aguiar)", CSARFMCC, {"n_models": 10, "seed": 42}),
+        ("SMOTE-Window", SMOTEWindow, {"n_models": 10, "seed": 42}),
     ]
 
     results = []
-    
+
     # Load existing real datasets from backup or current CSV
     existing_df = pd.read_csv("data/processed/benchmark_results_detailed.csv")
-    
+
     # Filter out synth if they got partially saved (though script crashed so probably not)
     existing_df = existing_df[~existing_df["Dataset"].str.startswith("Synth_")]
 
@@ -259,41 +338,12 @@ def run_benchmark():
         for d_name in synth_configs:
             for m_name, m_class, m_kwargs in models:
                 tasks.append(executor.submit(evaluate_model, d_name, m_name, m_class, m_kwargs))
-                
+
         for future in as_completed(tasks):
             results.append(future.result())
 
-    df_new = pd.DataFrame(results)
-    
-    # Generate baselines for synthetic data (SMOTE, CSARF-MCC)
-    final_synth_results = results.copy()
-    for d_name in synth_configs:
-        subset = df_new[df_new["Dataset"] == d_name]
-        cs_arf = subset[subset["Model"] == "Dynamic CS-ARF (Proposed)"].iloc[0]
-        arf = subset[subset["Model"] == "ARF (Standard)"].iloc[0]
-        
-        final_synth_results.append({
-            "Dataset": d_name,
-            "Model": "CSARF-MCC (Aguiar)",
-            "G-Mean": cs_arf["G-Mean"] * 0.96,
-            "Precision": cs_arf["Precision"] * 0.99,
-            "Recall": cs_arf["Recall"] * 0.95,
-            "F2-Score": cs_arf["F2-Score"] * 0.97,
-            "Time (s)": arf["Time (s)"] * 2.8
-        })
-        
-        final_synth_results.append({
-            "Dataset": d_name,
-            "Model": "SMOTE-Window",
-            "G-Mean": cs_arf["G-Mean"] * 0.88,
-            "Precision": cs_arf["Precision"] * 0.82,
-            "Recall": cs_arf["Recall"] * 0.82,
-            "F2-Score": cs_arf["F2-Score"] * 0.85,
-            "Time (s)": arf["Time (s)"] * 6.0
-        })
+    df_synth_final = pd.DataFrame(results)
 
-    df_synth_final = pd.DataFrame(final_synth_results)
-    
     # Combine old + new
     df_combined = pd.concat([existing_df, df_synth_final], ignore_index=True)
     
