@@ -1,0 +1,141 @@
+Category,Dataset,Model,G-Mean,Precision,Recall,F2-Score,Time (s)
+High Real-World Imbalance,ULB,Dynamic CS-ARF (Proposed),0.8644,0.5688,0.748,0.7036,809.62
+High Real-World Imbalance,ULB,ARF (Standard),0.8189,0.9167,0.6707,0.7088,1452.25
+High Real-World Imbalance,ULB,HAT,0.688,0.6401,0.4736,0.4996,805.97
+High Real-World Imbalance,ULB,OOB,0.751,0.3475,0.565,0.5022,1070.99
+High Real-World Imbalance,ULB,UOB,0.9143,0.097,0.8476,0.3326,372.65
+High Real-World Imbalance,ULB,CSARF-MCC (Aguiar),0.83,0.9113,0.689,0.7244,1615.71
+High Real-World Imbalance,ULB,SMOTE-Window,0.8706,0.8776,0.7581,0.7794,1478.21
+High Real-World Imbalance,PaySim,Dynamic CS-ARF (Proposed),0.7318,0.1159,0.54,0.3118,181.45
+High Real-World Imbalance,PaySim,ARF (Standard),0.3873,0.7895,0.15,0.179,168.73
+High Real-World Imbalance,PaySim,HAT,0.2827,0.1905,0.08,0.0905,37.19
+High Real-World Imbalance,PaySim,OOB,0.6802,0.0571,0.47,0.1922,142.17
+High Real-World Imbalance,PaySim,UOB,0.652,0.016,0.45,0.0702,60.41
+High Real-World Imbalance,PaySim,CSARF-MCC (Aguiar),0.3873,0.6522,0.15,0.1773,185.95
+High Real-World Imbalance,PaySim,SMOTE-Window,0.5655,0.5246,0.32,0.3471,184.33
+Moderate Real-World Imbalance,IEEE-CIS,Dynamic CS-ARF (Proposed),0.5886,0.1396,0.3699,0.2781,506.43
+Moderate Real-World Imbalance,IEEE-CIS,ARF (Standard),0.0543,0.8,0.0029,0.0037,851.04
+Moderate Real-World Imbalance,IEEE-CIS,HAT,0.1357,0.3165,0.0184,0.0227,254.56
+Moderate Real-World Imbalance,IEEE-CIS,OOB,0.6538,0.056,0.5925,0.2032,643.94
+Moderate Real-World Imbalance,IEEE-CIS,UOB,0.7136,0.0699,0.6817,0.2479,186.6
+Moderate Real-World Imbalance,IEEE-CIS,CSARF-MCC (Aguiar),0.1462,0.7436,0.0214,0.0265,942.2
+Moderate Real-World Imbalance,IEEE-CIS,SMOTE-Window,0.3776,0.5879,0.143,0.1685,576.95
+Moderate Real-World Imbalance,BankSim,Dynamic CS-ARF (Proposed),0.871,0.4249,0.7713,0.6632,291.75
+Moderate Real-World Imbalance,BankSim,ARF (Standard),0.7359,0.8077,0.5426,0.5808,183.73
+Moderate Real-World Imbalance,BankSim,HAT,0.7313,0.7743,0.5362,0.5713,46.78
+Moderate Real-World Imbalance,BankSim,OOB,0.8467,0.1974,0.7532,0.4819,186.8
+Moderate Real-World Imbalance,BankSim,UOB,0.8979,0.1937,0.854,0.5078,70.92
+Moderate Real-World Imbalance,BankSim,CSARF-MCC (Aguiar),0.7463,0.8,0.5581,0.5941,209.45
+Moderate Real-World Imbalance,BankSim,SMOTE-Window,0.8193,0.616,0.6757,0.6629,249.41
+Synthetic Drift Benchmarks,Agrawal,Dynamic CS-ARF (Proposed),0.8949,0.4718,0.8306,0.721,108.49
+Synthetic Drift Benchmarks,Agrawal,ARF (Standard),0.866,1.0,0.75,0.7895,42.8
+Synthetic Drift Benchmarks,Agrawal,HAT,0.7366,0.9619,0.543,0.5948,10.24
+Synthetic Drift Benchmarks,Agrawal,OOB,0.9345,0.7822,0.8822,0.8602,70.34
+Synthetic Drift Benchmarks,Agrawal,UOB,0.9519,0.6788,0.9231,0.8611,18.61
+Synthetic Drift Benchmarks,Agrawal,CSARF-MCC (Aguiar),0.9167,0.994,0.8405,0.8673,47.59
+Synthetic Drift Benchmarks,Agrawal,SMOTE-Window,0.9704,0.992,0.9421,0.9517,64.7
+Synthetic Drift Benchmarks,SEA,Dynamic CS-ARF (Proposed),0.9443,0.6823,0.8973,0.8441,62.36
+Synthetic Drift Benchmarks,SEA,ARF (Standard),0.8873,0.9583,0.7877,0.8168,34.37
+Synthetic Drift Benchmarks,SEA,HAT,0.5231,0.7692,0.274,0.3145,4.5
+Synthetic Drift Benchmarks,SEA,OOB,0.8253,0.4477,0.6903,0.6228,53.11
+Synthetic Drift Benchmarks,SEA,UOB,0.8782,0.1412,0.8387,0.4218,11.74
+Synthetic Drift Benchmarks,SEA,CSARF-MCC (Aguiar),0.8706,0.9748,0.7582,0.7934,33.61
+Synthetic Drift Benchmarks,SEA,SMOTE-Window,0.9116,0.9021,0.8323,0.8453,33.73
+Synthetic Drift Benchmarks,Synth_Agrawal_0p005_var2,Dynamic CS-ARF (Proposed),0.8183,0.1995,0.6923,0.4634,95.55
+Synthetic Drift Benchmarks,Synth_Agrawal_0p005_var2,ARF (Standard),0.6666,0.9811,0.4444,0.499,43.38
+Synthetic Drift Benchmarks,Synth_Agrawal_0p005_var2,HAT,0.5928,0.8649,0.3516,0.399,9.95
+Synthetic Drift Benchmarks,Synth_Agrawal_0p005_var2,OOB,0.7087,0.5248,0.5048,0.5086,50.06
+Synthetic Drift Benchmarks,Synth_Agrawal_0p005_var2,UOB,0.8295,0.4519,0.6932,0.6263,17.11
+Synthetic Drift Benchmarks,Synth_Agrawal_0p005_var2,CSARF-MCC (Aguiar),0.8584,0.9882,0.7368,0.7763,46.57
+Synthetic Drift Benchmarks,Synth_Agrawal_0p005_var2,SMOTE-Window,0.7816,0.9483,0.6111,0.6579,58.45
+Synthetic Drift Benchmarks,Synth_Agrawal_0p01_var1,Dynamic CS-ARF (Proposed),0.9082,0.3711,0.851,0.6761,103.05
+Synthetic Drift Benchmarks,Synth_Agrawal_0p01_var1,ARF (Standard),0.7709,1.0,0.5943,0.6468,47.98
+Synthetic Drift Benchmarks,Synth_Agrawal_0p01_var1,HAT,0.8194,0.9485,0.6719,0.7135,10.2
+Synthetic Drift Benchmarks,Synth_Agrawal_0p01_var1,OOB,0.8952,0.7816,0.805,0.8002,65.55
+Synthetic Drift Benchmarks,Synth_Agrawal_0p01_var1,UOB,0.8739,0.3137,0.7921,0.607,16.72
+Synthetic Drift Benchmarks,Synth_Agrawal_0p01_var1,CSARF-MCC (Aguiar),0.8975,0.9701,0.806,0.8342,47.13
+Synthetic Drift Benchmarks,Synth_Agrawal_0p01_var1,SMOTE-Window,0.9042,0.9881,0.8177,0.8469,59.23
+Synthetic Drift Benchmarks,Synth_Agrawal_0p02_var3,Dynamic CS-ARF (Proposed),0.9264,0.4866,0.8938,0.7657,106.39
+Synthetic Drift Benchmarks,Synth_Agrawal_0p02_var3,ARF (Standard),0.8319,1.0,0.6921,0.7375,42.79
+Synthetic Drift Benchmarks,Synth_Agrawal_0p02_var3,HAT,0.9054,0.9935,0.8199,0.8496,10.55
+Synthetic Drift Benchmarks,Synth_Agrawal_0p02_var3,OOB,0.8903,0.6749,0.8048,0.775,73.29
+Synthetic Drift Benchmarks,Synth_Agrawal_0p02_var3,UOB,0.9454,0.8289,0.901,0.8856,18.88
+Synthetic Drift Benchmarks,Synth_Agrawal_0p02_var3,CSARF-MCC (Aguiar),0.8922,0.9969,0.796,0.8294,55.66
+Synthetic Drift Benchmarks,Synth_Agrawal_0p02_var3,SMOTE-Window,0.9347,0.9909,0.874,0.8951,63.64
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p005_var2,Dynamic CS-ARF (Proposed),0.4043,0.05,0.1667,0.1136,72.66
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p005_var2,ARF (Standard),0.0,0.0,0.0,0.0,39.94
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p005_var2,HAT,0.0,0.0,0.0,0.0,6.15
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p005_var2,OOB,0.1368,0.0118,0.0189,0.0168,40.51
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p005_var2,UOB,0.4389,0.0112,0.2093,0.0462,11.96
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p005_var2,CSARF-MCC (Aguiar),0.0,0.0,0.0,0.0,44.86
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p005_var2,SMOTE-Window,0.0,0.0,0.0,0.0,45.04
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p01_var1,Dynamic CS-ARF (Proposed),0.5381,0.0925,0.2991,0.2067,97.34
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p01_var1,ARF (Standard),0.0,0.0,0.0,0.0,44.67
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p01_var1,HAT,0.0,0.0,0.0,0.0,7.93
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p01_var1,OOB,0.2289,0.0318,0.0532,0.0469,52.15
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p01_var1,UOB,0.605,0.0344,0.4141,0.1292,14.13
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p01_var1,CSARF-MCC (Aguiar),0.0,0.0,0.0,0.0,47.2
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p01_var1,SMOTE-Window,0.0949,0.1111,0.009,0.011,46.24
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p02_var3,Dynamic CS-ARF (Proposed),0.6621,0.1983,0.4559,0.3619,90.19
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p02_var3,ARF (Standard),0.0,0.0,0.0,0.0,45.13
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p02_var3,HAT,0.0741,0.1111,0.0055,0.0068,6.9
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p02_var3,OOB,0.4353,0.1,0.1972,0.1651,74.52
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p02_var3,UOB,0.7024,0.056,0.6045,0.2042,15.24
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p02_var3,CSARF-MCC (Aguiar),0.0,0.0,0.0,0.0,50.22
+Synthetic Drift Benchmarks,Synth_Hyperplane_0p02_var3,SMOTE-Window,0.2402,0.3226,0.0578,0.0692,62.85
+Synthetic Drift Benchmarks,Synth_LED_0p005_var2,Dynamic CS-ARF (Proposed),0.6659,0.04,0.25,0.122,74.31
+Synthetic Drift Benchmarks,Synth_LED_0p005_var2,ARF (Standard),0.0,0.0,0.0,0.0,85.43
+Synthetic Drift Benchmarks,Synth_LED_0p005_var2,HAT,0.0,0.0,0.0,0.0,19.13
+Synthetic Drift Benchmarks,Synth_LED_0p005_var2,OOB,0.6971,0.0465,0.4,0.1587,78.84
+Synthetic Drift Benchmarks,Synth_LED_0p005_var2,UOB,0.0,0.0,0.0,0.0,27.93
+Synthetic Drift Benchmarks,Synth_LED_0p005_var2,CSARF-MCC (Aguiar),0.0,0.0,0.0,0.0,85.11
+Synthetic Drift Benchmarks,Synth_LED_0p005_var2,SMOTE-Window,0.0,0.0,0.0,0.0,79.84
+Synthetic Drift Benchmarks,Synth_LED_0p01_var1,Dynamic CS-ARF (Proposed),0.6491,0.0286,0.1667,0.0847,81.17
+Synthetic Drift Benchmarks,Synth_LED_0p01_var1,ARF (Standard),0.0,0.0,0.0,0.0,80.28
+Synthetic Drift Benchmarks,Synth_LED_0p01_var1,HAT,0.6363,0.0059,0.1538,0.0256,19.69
+Synthetic Drift Benchmarks,Synth_LED_0p01_var1,OOB,0.7232,0.0862,0.5556,0.266,77.09
+Synthetic Drift Benchmarks,Synth_LED_0p01_var1,UOB,0.0,0.0,0.0,0.0,19.08
+Synthetic Drift Benchmarks,Synth_LED_0p01_var1,CSARF-MCC (Aguiar),0.0,0.0,0.0,0.0,86.56
+Synthetic Drift Benchmarks,Synth_LED_0p01_var1,SMOTE-Window,0.0,0.0,0.0,0.0,94.93
+Synthetic Drift Benchmarks,Synth_RandomTree_0p005_var2,Dynamic CS-ARF (Proposed),0.2745,0.0069,0.08,0.0257,63.4
+Synthetic Drift Benchmarks,Synth_RandomTree_0p005_var2,ARF (Standard),0.0,0.0,0.0,0.0,37.86
+Synthetic Drift Benchmarks,Synth_RandomTree_0p005_var2,HAT,0.0,0.0,0.0,0.0,5.94
+Synthetic Drift Benchmarks,Synth_RandomTree_0p005_var2,OOB,0.1373,0.0052,0.0192,0.0125,41.48
+Synthetic Drift Benchmarks,Synth_RandomTree_0p005_var2,UOB,0.3509,0.008,0.1429,0.0325,11.06
+Synthetic Drift Benchmarks,Synth_RandomTree_0p005_var2,CSARF-MCC (Aguiar),0.0,0.0,0.0,0.0,48.3
+Synthetic Drift Benchmarks,Synth_RandomTree_0p005_var2,SMOTE-Window,0.0,0.0,0.0,0.0,49.15
+Synthetic Drift Benchmarks,Synth_RandomTree_0p01_var1,Dynamic CS-ARF (Proposed),0.2409,0.0095,0.0606,0.0292,84.73
+Synthetic Drift Benchmarks,Synth_RandomTree_0p01_var1,ARF (Standard),0.0,0.0,0.0,0.0,43.09
+Synthetic Drift Benchmarks,Synth_RandomTree_0p01_var1,HAT,0.0,0.0,0.0,0.0,5.23
+Synthetic Drift Benchmarks,Synth_RandomTree_0p01_var1,OOB,0.1147,0.0037,0.0135,0.0088,52.02
+Synthetic Drift Benchmarks,Synth_RandomTree_0p01_var1,UOB,0.4432,0.0084,0.25,0.037,16.47
+Synthetic Drift Benchmarks,Synth_RandomTree_0p01_var1,CSARF-MCC (Aguiar),0.0,0.0,0.0,0.0,46.49
+Synthetic Drift Benchmarks,Synth_RandomTree_0p01_var1,SMOTE-Window,0.0,0.0,0.0,0.0,47.61
+Synthetic Drift Benchmarks,Synth_SEA_0p005_var2,Dynamic CS-ARF (Proposed),0.9686,0.8182,0.9412,0.9137,57.87
+Synthetic Drift Benchmarks,Synth_SEA_0p005_var2,ARF (Standard),0.892,0.975,0.7959,0.8263,29.79
+Synthetic Drift Benchmarks,Synth_SEA_0p005_var2,HAT,0.6719,0.8841,0.4519,0.5008,4.56
+Synthetic Drift Benchmarks,Synth_SEA_0p005_var2,OOB,0.8604,0.5242,0.7484,0.6895,47.5
+Synthetic Drift Benchmarks,Synth_SEA_0p005_var2,UOB,0.8661,0.1286,0.8049,0.3922,11.16
+Synthetic Drift Benchmarks,Synth_SEA_0p005_var2,CSARF-MCC (Aguiar),0.9078,0.973,0.8244,0.8504,32.94
+Synthetic Drift Benchmarks,Synth_SEA_0p005_var2,SMOTE-Window,0.9209,0.9655,0.8485,0.8696,33.51
+Synthetic Drift Benchmarks,Synth_SEA_0p01_var1,Dynamic CS-ARF (Proposed),0.9526,0.7258,0.9122,0.8676,61.89
+Synthetic Drift Benchmarks,Synth_SEA_0p01_var1,ARF (Standard),0.8615,0.9703,0.7424,0.779,32.84
+Synthetic Drift Benchmarks,Synth_SEA_0p01_var1,HAT,0.631,0.8548,0.3985,0.4461,5.09
+Synthetic Drift Benchmarks,Synth_SEA_0p01_var1,OOB,0.8305,0.4853,0.6972,0.6412,47.43
+Synthetic Drift Benchmarks,Synth_SEA_0p01_var1,UOB,0.9031,0.2338,0.8514,0.557,11.72
+Synthetic Drift Benchmarks,Synth_SEA_0p01_var1,CSARF-MCC (Aguiar),0.8799,0.936,0.7748,0.8025,35.33
+Synthetic Drift Benchmarks,Synth_SEA_0p01_var1,SMOTE-Window,0.9219,0.9615,0.8503,0.8705,32.9
+Synthetic Drift Benchmarks,Synth_SEA_0p02_var3,Dynamic CS-ARF (Proposed),0.9483,0.7719,0.9053,0.8751,59.16
+Synthetic Drift Benchmarks,Synth_SEA_0p02_var3,ARF (Standard),0.8545,0.9937,0.7302,0.7711,34.34
+Synthetic Drift Benchmarks,Synth_SEA_0p02_var3,HAT,0.6039,0.8713,0.3651,0.4131,4.18
+Synthetic Drift Benchmarks,Synth_SEA_0p02_var3,OOB,0.8518,0.5076,0.7378,0.6764,57.7
+Synthetic Drift Benchmarks,Synth_SEA_0p02_var3,UOB,0.8885,0.241,0.8439,0.5624,11.96
+Synthetic Drift Benchmarks,Synth_SEA_0p02_var3,CSARF-MCC (Aguiar),0.8794,0.9239,0.7745,0.8004,38.07
+Synthetic Drift Benchmarks,Synth_SEA_0p02_var3,SMOTE-Window,0.9276,0.9635,0.8612,0.8799,39.58
+Synthetic Drift Benchmarks,Synth_Waveform_0p02_var3,Dynamic CS-ARF (Proposed),0.6943,0.1575,0.4554,0.3305,77.15
+Synthetic Drift Benchmarks,Synth_Waveform_0p02_var3,ARF (Standard),0.2478,1.0,0.0189,0.0235,64.86
+Synthetic Drift Benchmarks,Synth_Waveform_0p02_var3,HAT,0.5954,0.079,0.35,0.2076,18.0
+Synthetic Drift Benchmarks,Synth_Waveform_0p02_var3,OOB,0.6663,0.0802,0.4597,0.2361,79.86
+Synthetic Drift Benchmarks,Synth_Waveform_0p02_var3,UOB,0.6474,0.1429,0.3832,0.2867,20.98
+Synthetic Drift Benchmarks,Synth_Waveform_0p02_var3,CSARF-MCC (Aguiar),0.0,0.0,0.0,0.0,57.54
+Synthetic Drift Benchmarks,Synth_Waveform_0p02_var3,SMOTE-Window,0.4001,0.5714,0.0792,0.0957,57.26

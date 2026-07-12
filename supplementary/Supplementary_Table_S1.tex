@@ -1,0 +1,32 @@
+\documentclass[10pt]{article}
+\usepackage[margin=1.8cm]{geometry}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{amsmath}
+
+\title{Supplementary Material S1\\
+\large Complete Prequential Performance Across All 20 Data Streams}
+\author{Dynamic Cost-Sensitive Adaptive Random Forest for Real-Time Fraud Detection\\
+in Imbalanced Data Streams}
+\date{}
+
+\begin{document}
+\maketitle
+
+This document accompanies the main manuscript and reports the complete prequential
+benchmarking results (G-Mean, Precision, Recall, $F_2$-Score, and total execution time)
+across all 20 evaluated data streams and all seven compared algorithms (Dynamic CS-ARF,
+ARF, HAT, OOB, UOB, CSARF-MCC, and SMOTE-Window). The main manuscript's Table 4 presents
+only six primary representative streams due to space constraints; the full corpus,
+including all 16 synthetic drift configurations, is reported here in full. Bold values
+indicate the best-performing algorithm for that metric within each dataset. These are the
+same results used to compute the Friedman/Nemenyi statistical tests reported in the main
+manuscript (Section 4.3.2), and were generated with the deterministic seed
+(\texttt{random\_seed = 42}) documented in the Reproducibility Statement. The raw,
+machine-readable CSV underlying this table is provided alongside this document as
+\texttt{Supplementary\_Table\_S1\_full\_results.csv}.
+
+\input{full_results_table.tex}
+
+\end{document}

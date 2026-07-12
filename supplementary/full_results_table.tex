@@ -1,0 +1,156 @@
+\begin{longtable}{|l|l|c|c|c|c|c|}
+\caption{Supplementary Table S1: Complete prequential performance across all 20 evaluated data streams and seven algorithms (G-Mean, Precision, Recall, $F_2$-Score, Time in seconds). Bold indicates the best value per metric within each dataset.} \label{tab:supp_full_results} \\
+\hline
+\textbf{Dataset} & \textbf{Algorithm} & \textbf{G-Mean} & \textbf{Precision} & \textbf{Recall} & \textbf{F$_2$-Score} & \textbf{Time (s)} \\ \hline
+\endfirsthead
+\hline
+\textbf{Dataset} & \textbf{Algorithm} & \textbf{G-Mean} & \textbf{Precision} & \textbf{Recall} & \textbf{F$_2$-Score} & \textbf{Time (s)} \\ \hline
+\endhead
+\hline \multicolumn{7}{r}{\textit{Continued on next page}} \\ \hline
+\endfoot
+\hline
+\endlastfoot
+\multicolumn{7}{|l|}{\textbf{High Real-World Imbalance}} \\ \hline
+\multirow{7}{*}{ULB} & Dynamic CS-ARF (Proposed) & 0.8644 & 0.5688 & 0.7480 & 0.7036 & 809.62 \\ \cline{2-7}
+ & ARF (Standard) & 0.8189 & \textbf{0.9167} & 0.6707 & 0.7088 & 1452.25 \\ \cline{2-7}
+ & HAT & 0.6880 & 0.6401 & 0.4736 & 0.4996 & 805.97 \\ \cline{2-7}
+ & OOB & 0.7510 & 0.3475 & 0.5650 & 0.5022 & 1070.99 \\ \cline{2-7}
+ & UOB & \textbf{0.9143} & 0.0970 & \textbf{0.8476} & 0.3326 & 372.65 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.8300 & 0.9113 & 0.6890 & 0.7244 & 1615.71 \\ \cline{2-7}
+ & SMOTE-Window & 0.8706 & 0.8776 & 0.7581 & \textbf{0.7794} & 1478.21 \\ \hline
+\multirow{7}{*}{PaySim} & Dynamic CS-ARF (Proposed) & \textbf{0.7318} & 0.1159 & \textbf{0.5400} & 0.3118 & 181.45 \\ \cline{2-7}
+ & ARF (Standard) & 0.3873 & \textbf{0.7895} & 0.1500 & 0.1790 & 168.73 \\ \cline{2-7}
+ & HAT & 0.2827 & 0.1905 & 0.0800 & 0.0905 & 37.19 \\ \cline{2-7}
+ & OOB & 0.6802 & 0.0571 & 0.4700 & 0.1922 & 142.17 \\ \cline{2-7}
+ & UOB & 0.6520 & 0.0160 & 0.4500 & 0.0702 & 60.41 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.3873 & 0.6522 & 0.1500 & 0.1773 & 185.95 \\ \cline{2-7}
+ & SMOTE-Window & 0.5655 & 0.5246 & 0.3200 & \textbf{0.3471} & 184.33 \\ \hline
+\multicolumn{7}{|l|}{\textbf{Moderate Real-World Imbalance}} \\ \hline
+\multirow{7}{*}{IEEE-CIS} & Dynamic CS-ARF (Proposed) & 0.5886 & 0.1396 & 0.3699 & \textbf{0.2781} & 506.43 \\ \cline{2-7}
+ & ARF (Standard) & 0.0543 & \textbf{0.8000} & 0.0029 & 0.0037 & 851.04 \\ \cline{2-7}
+ & HAT & 0.1357 & 0.3165 & 0.0184 & 0.0227 & 254.56 \\ \cline{2-7}
+ & OOB & 0.6538 & 0.0560 & 0.5925 & 0.2032 & 643.94 \\ \cline{2-7}
+ & UOB & \textbf{0.7136} & 0.0699 & \textbf{0.6817} & 0.2479 & 186.60 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.1462 & 0.7436 & 0.0214 & 0.0265 & 942.20 \\ \cline{2-7}
+ & SMOTE-Window & 0.3776 & 0.5879 & 0.1430 & 0.1685 & 576.95 \\ \hline
+\multirow{7}{*}{BankSim} & Dynamic CS-ARF (Proposed) & 0.8710 & 0.4249 & 0.7713 & \textbf{0.6632} & 291.75 \\ \cline{2-7}
+ & ARF (Standard) & 0.7359 & \textbf{0.8077} & 0.5426 & 0.5808 & 183.73 \\ \cline{2-7}
+ & HAT & 0.7313 & 0.7743 & 0.5362 & 0.5713 & 46.78 \\ \cline{2-7}
+ & OOB & 0.8467 & 0.1974 & 0.7532 & 0.4819 & 186.80 \\ \cline{2-7}
+ & UOB & \textbf{0.8979} & 0.1937 & \textbf{0.8540} & 0.5078 & 70.92 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.7463 & 0.8000 & 0.5581 & 0.5941 & 209.45 \\ \cline{2-7}
+ & SMOTE-Window & 0.8193 & 0.6160 & 0.6757 & 0.6629 & 249.41 \\ \hline
+\multicolumn{7}{|l|}{\textbf{Synthetic Drift Benchmarks}} \\ \hline
+\multirow{7}{*}{Agrawal} & Dynamic CS-ARF (Proposed) & 0.8949 & 0.4718 & 0.8306 & 0.7210 & 108.49 \\ \cline{2-7}
+ & ARF (Standard) & 0.8660 & \textbf{1.0000} & 0.7500 & 0.7895 & 42.80 \\ \cline{2-7}
+ & HAT & 0.7366 & 0.9619 & 0.5430 & 0.5948 & 10.24 \\ \cline{2-7}
+ & OOB & 0.9345 & 0.7822 & 0.8822 & 0.8602 & 70.34 \\ \cline{2-7}
+ & UOB & 0.9519 & 0.6788 & 0.9231 & 0.8611 & 18.61 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.9167 & 0.9940 & 0.8405 & 0.8673 & 47.59 \\ \cline{2-7}
+ & SMOTE-Window & \textbf{0.9704} & 0.9920 & \textbf{0.9421} & \textbf{0.9517} & 64.70 \\ \hline
+\multirow{7}{*}{SEA} & Dynamic CS-ARF (Proposed) & \textbf{0.9443} & 0.6823 & \textbf{0.8973} & 0.8441 & 62.36 \\ \cline{2-7}
+ & ARF (Standard) & 0.8873 & 0.9583 & 0.7877 & 0.8168 & 34.37 \\ \cline{2-7}
+ & HAT & 0.5231 & 0.7692 & 0.2740 & 0.3145 & 4.50 \\ \cline{2-7}
+ & OOB & 0.8253 & 0.4477 & 0.6903 & 0.6228 & 53.11 \\ \cline{2-7}
+ & UOB & 0.8782 & 0.1412 & 0.8387 & 0.4218 & 11.74 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.8706 & \textbf{0.9748} & 0.7582 & 0.7934 & 33.61 \\ \cline{2-7}
+ & SMOTE-Window & 0.9116 & 0.9021 & 0.8323 & \textbf{0.8453} & 33.73 \\ \hline
+\multirow{7}{*}{Synth_Agrawal_0p005_var2} & Dynamic CS-ARF (Proposed) & 0.8183 & 0.1995 & 0.6923 & 0.4634 & 95.55 \\ \cline{2-7}
+ & ARF (Standard) & 0.6666 & 0.9811 & 0.4444 & 0.4990 & 43.38 \\ \cline{2-7}
+ & HAT & 0.5928 & 0.8649 & 0.3516 & 0.3990 & 9.95 \\ \cline{2-7}
+ & OOB & 0.7087 & 0.5248 & 0.5048 & 0.5086 & 50.06 \\ \cline{2-7}
+ & UOB & 0.8295 & 0.4519 & 0.6932 & 0.6263 & 17.11 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & \textbf{0.8584} & \textbf{0.9882} & \textbf{0.7368} & \textbf{0.7763} & 46.57 \\ \cline{2-7}
+ & SMOTE-Window & 0.7816 & 0.9483 & 0.6111 & 0.6579 & 58.45 \\ \hline
+\multirow{7}{*}{Synth_Agrawal_0p01_var1} & Dynamic CS-ARF (Proposed) & \textbf{0.9082} & 0.3711 & \textbf{0.8510} & 0.6761 & 103.05 \\ \cline{2-7}
+ & ARF (Standard) & 0.7709 & \textbf{1.0000} & 0.5943 & 0.6468 & 47.98 \\ \cline{2-7}
+ & HAT & 0.8194 & 0.9485 & 0.6719 & 0.7135 & 10.20 \\ \cline{2-7}
+ & OOB & 0.8952 & 0.7816 & 0.8050 & 0.8002 & 65.55 \\ \cline{2-7}
+ & UOB & 0.8739 & 0.3137 & 0.7921 & 0.6070 & 16.72 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.8975 & 0.9701 & 0.8060 & 0.8342 & 47.13 \\ \cline{2-7}
+ & SMOTE-Window & 0.9042 & 0.9881 & 0.8177 & \textbf{0.8469} & 59.23 \\ \hline
+\multirow{7}{*}{Synth_Agrawal_0p02_var3} & Dynamic CS-ARF (Proposed) & 0.9264 & 0.4866 & 0.8938 & 0.7657 & 106.39 \\ \cline{2-7}
+ & ARF (Standard) & 0.8319 & \textbf{1.0000} & 0.6921 & 0.7375 & 42.79 \\ \cline{2-7}
+ & HAT & 0.9054 & 0.9935 & 0.8199 & 0.8496 & 10.55 \\ \cline{2-7}
+ & OOB & 0.8903 & 0.6749 & 0.8048 & 0.7750 & 73.29 \\ \cline{2-7}
+ & UOB & \textbf{0.9454} & 0.8289 & \textbf{0.9010} & 0.8856 & 18.88 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.8922 & 0.9969 & 0.7960 & 0.8294 & 55.66 \\ \cline{2-7}
+ & SMOTE-Window & 0.9347 & 0.9909 & 0.8740 & \textbf{0.8951} & 63.64 \\ \hline
+\multirow{7}{*}{Synth_Hyperplane_0p005_var2} & Dynamic CS-ARF (Proposed) & 0.4043 & \textbf{0.0500} & 0.1667 & \textbf{0.1136} & 72.66 \\ \cline{2-7}
+ & ARF (Standard) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 39.94 \\ \cline{2-7}
+ & HAT & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 6.15 \\ \cline{2-7}
+ & OOB & 0.1368 & 0.0118 & 0.0189 & 0.0168 & 40.51 \\ \cline{2-7}
+ & UOB & \textbf{0.4389} & 0.0112 & \textbf{0.2093} & 0.0462 & 11.96 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 44.86 \\ \cline{2-7}
+ & SMOTE-Window & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 45.04 \\ \hline
+\multirow{7}{*}{Synth_Hyperplane_0p01_var1} & Dynamic CS-ARF (Proposed) & 0.5381 & 0.0925 & 0.2991 & \textbf{0.2067} & 97.34 \\ \cline{2-7}
+ & ARF (Standard) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 44.67 \\ \cline{2-7}
+ & HAT & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 7.93 \\ \cline{2-7}
+ & OOB & 0.2289 & 0.0318 & 0.0532 & 0.0469 & 52.15 \\ \cline{2-7}
+ & UOB & \textbf{0.6050} & 0.0344 & \textbf{0.4141} & 0.1292 & 14.13 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 47.20 \\ \cline{2-7}
+ & SMOTE-Window & 0.0949 & \textbf{0.1111} & 0.0090 & 0.0110 & 46.24 \\ \hline
+\multirow{7}{*}{Synth_Hyperplane_0p02_var3} & Dynamic CS-ARF (Proposed) & 0.6621 & 0.1983 & 0.4559 & \textbf{0.3619} & 90.19 \\ \cline{2-7}
+ & ARF (Standard) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 45.13 \\ \cline{2-7}
+ & HAT & 0.0741 & 0.1111 & 0.0055 & 0.0068 & 6.90 \\ \cline{2-7}
+ & OOB & 0.4353 & 0.1000 & 0.1972 & 0.1651 & 74.52 \\ \cline{2-7}
+ & UOB & \textbf{0.7024} & 0.0560 & \textbf{0.6045} & 0.2042 & 15.24 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 50.22 \\ \cline{2-7}
+ & SMOTE-Window & 0.2402 & \textbf{0.3226} & 0.0578 & 0.0692 & 62.85 \\ \hline
+\multirow{7}{*}{Synth_LED_0p005_var2} & Dynamic CS-ARF (Proposed) & 0.6659 & 0.0400 & 0.2500 & 0.1220 & 74.31 \\ \cline{2-7}
+ & ARF (Standard) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 85.43 \\ \cline{2-7}
+ & HAT & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 19.13 \\ \cline{2-7}
+ & OOB & \textbf{0.6971} & \textbf{0.0465} & \textbf{0.4000} & \textbf{0.1587} & 78.84 \\ \cline{2-7}
+ & UOB & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 27.93 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 85.11 \\ \cline{2-7}
+ & SMOTE-Window & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 79.84 \\ \hline
+\multirow{7}{*}{Synth_LED_0p01_var1} & Dynamic CS-ARF (Proposed) & 0.6491 & 0.0286 & 0.1667 & 0.0847 & 81.17 \\ \cline{2-7}
+ & ARF (Standard) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 80.28 \\ \cline{2-7}
+ & HAT & 0.6363 & 0.0059 & 0.1538 & 0.0256 & 19.69 \\ \cline{2-7}
+ & OOB & \textbf{0.7232} & \textbf{0.0862} & \textbf{0.5556} & \textbf{0.2660} & 77.09 \\ \cline{2-7}
+ & UOB & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 19.08 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 86.56 \\ \cline{2-7}
+ & SMOTE-Window & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 94.93 \\ \hline
+\multirow{7}{*}{Synth_RandomTree_0p005_var2} & Dynamic CS-ARF (Proposed) & 0.2745 & 0.0069 & 0.0800 & 0.0257 & 63.40 \\ \cline{2-7}
+ & ARF (Standard) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 37.86 \\ \cline{2-7}
+ & HAT & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 5.94 \\ \cline{2-7}
+ & OOB & 0.1373 & 0.0052 & 0.0192 & 0.0125 & 41.48 \\ \cline{2-7}
+ & UOB & \textbf{0.3509} & \textbf{0.0080} & \textbf{0.1429} & \textbf{0.0325} & 11.06 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 48.30 \\ \cline{2-7}
+ & SMOTE-Window & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 49.15 \\ \hline
+\multirow{7}{*}{Synth_RandomTree_0p01_var1} & Dynamic CS-ARF (Proposed) & 0.2409 & \textbf{0.0095} & 0.0606 & 0.0292 & 84.73 \\ \cline{2-7}
+ & ARF (Standard) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 43.09 \\ \cline{2-7}
+ & HAT & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 5.23 \\ \cline{2-7}
+ & OOB & 0.1147 & 0.0037 & 0.0135 & 0.0088 & 52.02 \\ \cline{2-7}
+ & UOB & \textbf{0.4432} & 0.0084 & \textbf{0.2500} & \textbf{0.0370} & 16.47 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 46.49 \\ \cline{2-7}
+ & SMOTE-Window & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 47.61 \\ \hline
+\multirow{7}{*}{Synth_SEA_0p005_var2} & Dynamic CS-ARF (Proposed) & \textbf{0.9686} & 0.8182 & \textbf{0.9412} & \textbf{0.9137} & 57.87 \\ \cline{2-7}
+ & ARF (Standard) & 0.8920 & \textbf{0.9750} & 0.7959 & 0.8263 & 29.79 \\ \cline{2-7}
+ & HAT & 0.6719 & 0.8841 & 0.4519 & 0.5008 & 4.56 \\ \cline{2-7}
+ & OOB & 0.8604 & 0.5242 & 0.7484 & 0.6895 & 47.50 \\ \cline{2-7}
+ & UOB & 0.8661 & 0.1286 & 0.8049 & 0.3922 & 11.16 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.9078 & 0.9730 & 0.8244 & 0.8504 & 32.94 \\ \cline{2-7}
+ & SMOTE-Window & 0.9209 & 0.9655 & 0.8485 & 0.8696 & 33.51 \\ \hline
+\multirow{7}{*}{Synth_SEA_0p01_var1} & Dynamic CS-ARF (Proposed) & \textbf{0.9526} & 0.7258 & \textbf{0.9122} & 0.8676 & 61.89 \\ \cline{2-7}
+ & ARF (Standard) & 0.8615 & \textbf{0.9703} & 0.7424 & 0.7790 & 32.84 \\ \cline{2-7}
+ & HAT & 0.6310 & 0.8548 & 0.3985 & 0.4461 & 5.09 \\ \cline{2-7}
+ & OOB & 0.8305 & 0.4853 & 0.6972 & 0.6412 & 47.43 \\ \cline{2-7}
+ & UOB & 0.9031 & 0.2338 & 0.8514 & 0.5570 & 11.72 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.8799 & 0.9360 & 0.7748 & 0.8025 & 35.33 \\ \cline{2-7}
+ & SMOTE-Window & 0.9219 & 0.9615 & 0.8503 & \textbf{0.8705} & 32.90 \\ \hline
+\multirow{7}{*}{Synth_SEA_0p02_var3} & Dynamic CS-ARF (Proposed) & \textbf{0.9483} & 0.7719 & \textbf{0.9053} & 0.8751 & 59.16 \\ \cline{2-7}
+ & ARF (Standard) & 0.8545 & \textbf{0.9937} & 0.7302 & 0.7711 & 34.34 \\ \cline{2-7}
+ & HAT & 0.6039 & 0.8713 & 0.3651 & 0.4131 & 4.18 \\ \cline{2-7}
+ & OOB & 0.8518 & 0.5076 & 0.7378 & 0.6764 & 57.70 \\ \cline{2-7}
+ & UOB & 0.8885 & 0.2410 & 0.8439 & 0.5624 & 11.96 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.8794 & 0.9239 & 0.7745 & 0.8004 & 38.07 \\ \cline{2-7}
+ & SMOTE-Window & 0.9276 & 0.9635 & 0.8612 & \textbf{0.8799} & 39.58 \\ \hline
+\multirow{7}{*}{Synth_Waveform_0p02_var3} & Dynamic CS-ARF (Proposed) & \textbf{0.6943} & 0.1575 & 0.4554 & \textbf{0.3305} & 77.15 \\ \cline{2-7}
+ & ARF (Standard) & 0.2478 & \textbf{1.0000} & 0.0189 & 0.0235 & 64.86 \\ \cline{2-7}
+ & HAT & 0.5954 & 0.0790 & 0.3500 & 0.2076 & 18.00 \\ \cline{2-7}
+ & OOB & 0.6663 & 0.0802 & \textbf{0.4597} & 0.2361 & 79.86 \\ \cline{2-7}
+ & UOB & 0.6474 & 0.1429 & 0.3832 & 0.2867 & 20.98 \\ \cline{2-7}
+ & CSARF-MCC (Aguiar) & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 57.54 \\ \cline{2-7}
+ & SMOTE-Window & 0.4001 & 0.5714 & 0.0792 & 0.0957 & 57.26 \\ \hline
+\end{longtable}
